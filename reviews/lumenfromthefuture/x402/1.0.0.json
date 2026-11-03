@@ -1,0 +1,102 @@
+{
+  "release": {
+    "registry": "clawhub",
+    "owner": "lumenfromthefuture",
+    "slug": "x402",
+    "version": "1.0.0"
+  },
+  "files": "sha256:bfd672b09277b4ee554b98fe7a330d53027671c16ab00ec5f81aa57b61d14a3c",
+  "network": "testnet",
+  "task": 9,
+  "order": "0xe945a9766e9e42b8230f8e4b3d0be3b69b3fcf53115431083e8aabaecfdce5ea",
+  "record": "https://brain.testnet.usebrainchain.com/records/0x3065d948d07bd07ff900cb75e39b1fd0c50823b9c6a2414fd471bbb9aa6dbc3f.txt",
+  "verify": "npx brainchain-verify testnet --task 9",
+  "summary": "x402 is an agent payment helper that pays for HTTP resources with USDC on Base (chain ID 8453) or Base Sepolia by signing EIP-3009 transferWithAuthorization payloads and retrying requests with an X-Payment header. It requires a wallet private key, supplied via the PRIVATE_KEY or WALLET_PATH environment variables or an account object, and Node.js with the viem dependency. It contacts paid resource URLs and, in its example, api.conway.tech, and scans base64/JSON payment requirements from remote servers. No hosts or binaries beyond Node.js plus viem are needed; the metadata declares no environment variables even though the usage, examples and test script all read PRIVATE_KEY or WALLET_PATH.",
+  "findings": [
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 31,
+      "message": "The usage example reads process.env.PRIVATE_KEY, an environment variable that metadata.openclaw.requires.env does not declare."
+    },
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 83,
+      "message": "The documented Conway credits command sets PRIVATE_KEY on the shell command line, another key the release does not declare in requires.env."
+    },
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "examples/conway-credits.mjs",
+      "line": 18,
+      "message": "loadWallet() reads process.env.PRIVATE_KEY to build the signing account, but requires.env declares nothing."
+    },
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "examples/conway-credits.mjs",
+      "line": 22,
+      "message": "loadWallet() also reads process.env.WALLET_PATH to locate a wallet file, an undeclared environment variable."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "critical",
+      "file": "examples/conway-credits.mjs",
+      "line": 19,
+      "message": "The private key from process.env.PRIVATE_KEY is passed to privateKeyToAccount, handling a raw wallet credential."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "critical",
+      "file": "examples/conway-credits.mjs",
+      "line": 24,
+      "message": "wallet.privateKey read from the WALLET_PATH JSON file is passed to privateKeyToAccount, consuming a private key from disk."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "critical",
+      "file": "SKILL.md",
+      "line": 18,
+      "message": "Prerequisites state an Ethereum wallet with private key is required, revealing the skill depends on a private key credential."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "warn",
+      "file": "examples/conway-credits.mjs",
+      "line": 38,
+      "message": "Builds a URL at api.conway.tech embedding the wallet address and top-up amount, then pays it via x402Fetch, sending data to that host."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "info",
+      "file": "x402.mjs",
+      "line": 162,
+      "message": "x402Fetch issues an HTTP request to the caller-supplied url, which may be any remote host."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "info",
+      "file": "x402.mjs",
+      "line": 187,
+      "message": "After payment the signed X-Payment authorization is resent to the same remote URL, exposing the signature to that host."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "package.json",
+      "line": 8,
+      "message": "The npm test script runs node examples/conway-credits.mjs, so running tests executes payment code that requires wallet credentials."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "skill-card.md",
+      "line": 56,
+      "message": "The skill card cites only server release metadata and package.json for version 1.0.0 while the SKILL.md advertises conway-domain.mjs, which is absent from the release."
+    }
+  ],
+  "reviewedAt": "2026-11-03"
+}

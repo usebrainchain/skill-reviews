@@ -1,0 +1,7 @@
+{
+  "name": "brainchain-skill-reviews",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test gate/*.test.mjs" }
+}

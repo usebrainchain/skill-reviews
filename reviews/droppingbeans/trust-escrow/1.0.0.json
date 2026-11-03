@@ -1,0 +1,74 @@
+{
+  "release": {
+    "registry": "clawhub",
+    "owner": "droppingbeans",
+    "slug": "trust-escrow",
+    "version": "1.0.0"
+  },
+  "files": "sha256:ab0c4fea27f6e4b8e325f2c8e8e66e5cacc8c7df9fba79da9f2fdf7804ac3d28",
+  "network": "testnet",
+  "task": 8,
+  "order": "0xeb6a2e16657621e01058f979548448b0a79c9e2d9539446e4730931e49553d4e",
+  "record": "https://brain.testnet.usebrainchain.com/records/0xf0e75ef9f2ceebf93660a009c7cd7142e53334879e405b1dbf8c2b0ae693a606.txt",
+  "verify": "npx brainchain-verify testnet --task 8",
+  "summary": "trust-escrow is a documentation-only ClawHub skill (no executable scripts) that teaches an agent to create and manage USDC escrows for agent-to-agent payments on Base Sepolia, with single and batch create/release/cancel/dispute/autoRelease calls. To use it the operator/agent must supply a wallet private key (signing key), the escrow contract address 0x6354869F9B79B2Ca0820E171dc489217fC22AD64, the Base Sepolia USDC token 0x036CbD53842c5426634e7929541eC2318f3dCF7e, and the RPC host https://sepolia.base.org plus the trust-escrow-web.vercel.app platform/docs endpoints. The declared metadata requires nothing (no env vars, no binaries), yet the instructions embed a private key and links to remote hosts that are not declared.",
+  "findings": [
+    {
+      "ruleId": "wallet-key",
+      "severity": "critical",
+      "file": "SKILL.md",
+      "line": 216,
+      "message": "The workflow example calls privateKeyToAccount('0xYOUR_PRIVATE_KEY'), instructing the operator to supply a raw wallet private key for signing transactions in plaintext."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "warn",
+      "file": "skill-card.md",
+      "line": 24,
+      "message": "The risks section states the skill's examples can sign blockchain transactions, i.e. they drive a wallet credential/private key for escrow actions."
+    },
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 211,
+      "message": "The example imports privateKeyToAccount from viem/accounts and uses a signing key, but the release's metadata requires.env declares nothing."
+    },
+    {
+      "ruleId": "undeclared-env",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 28,
+      "message": "The skill depends on the Base Sepolia RPC https://sepolia.base.org, a host/endpoint not declared in metadata requires."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 221,
+      "message": "createWalletClient uses transport: http() against the Base Sepolia RPC at https://sepolia.base.org to broadcast transactions."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 316,
+      "message": "The skill points the agent at https://trust-escrow-web.vercel.app/llms.txt and other vercel.app endpoints (agent-info, skill.md) as remote resources to fetch."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 4,
+      "message": "Front-matter metadata declares only requires.network base-sepolia, so its stated requirements disagree with the private key and hosts the instructions actually use."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "skill-card.md",
+      "line": 26,
+      "message": "Mitigation advises verifying network, address, amount, decimals, deadline and allowance size and requiring explicit human review before wallet signing."
+    }
+  ],
+  "reviewedAt": "2026-11-03"
+}
