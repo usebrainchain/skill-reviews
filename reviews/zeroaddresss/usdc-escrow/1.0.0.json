@@ -1,0 +1,116 @@
+{
+  "release": {
+    "registry": "clawhub",
+    "owner": "zeroaddresss",
+    "slug": "usdc-escrow",
+    "version": "1.0.0"
+  },
+  "files": "sha256:dad1bfbb5acbc8373f754dc2a2bd18a886d47d37865a20482ff00b8deef395c8",
+  "network": "mainnet",
+  "task": 3,
+  "order": "0x92f79c18ca2e86068ef4bf2019066232badf00503e7e25998e2faf5d0e4767a7",
+  "record": "https://brain.usebrainchain.com/records/0x862f7c5782d923cccafea1e1a366bcb154cd31e56dd8786a7bcd4bd57be2c09b.txt",
+  "verify": "npx brainchain-verify mainnet --task 3",
+  "summary": "The usdc-escrow skill wraps a third-party hosted REST API (default https://api.payclawback.xyz, overridable via the ESCROW_API_URL environment variable) to create, list, inspect, release, dispute, resolve and reclaim USDC escrows on Base Sepolia; it requires the curl and jq binaries and needs no API keys or wallet credentials from the operator, since the server wallet holds the arbiter key and signs contract calls. Scripts send user-supplied beneficiary addresses, amounts and descriptions over plain HTTP(S) to that host, and the skill-card warns that fund-moving calls are unauthenticated. No private keys, seed phrases, downloaded code, encoded payloads or metadata.clawdbot blocks are present, but ESCROW_API_URL is used throughout without being declared in metadata.openclaw.requires.env.",
+  "findings": [
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 18,
+      "message": "SKILL.md tells operators to set ESCROW_API_URL to override the API backend, but metadata.openclaw.requires.env declares nothing, so this env var is undeclared."
+    },
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "scripts/create-escrow.sh",
+      "line": 5,
+      "message": "create-escrow.sh reads ESCROW_API_URL to choose the API host, but requires.env does not declare this variable."
+    },
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "scripts/list-escrows.sh",
+      "line": 5,
+      "message": "list-escrows.sh reads ESCROW_API_URL to choose the API host, but requires.env does not declare this variable."
+    },
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "references/api-docs.md",
+      "line": 309,
+      "message": "The WebSocket URL is templated as ws://{ESCROW_API_URL}/ws, relying on the undeclared ESCROW_API_URL env var and also using an unencrypted ws:// scheme."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "warn",
+      "file": "scripts/create-escrow.sh",
+      "line": 18,
+      "message": "create-escrow.sh POSTs the beneficiary address, amount and description to https://api.payclawback.xyz/api/escrows (or whatever ESCROW_API_URL points to)."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "warn",
+      "file": "scripts/release-escrow.sh",
+      "line": 14,
+      "message": "release-escrow.sh POSTs an unauthenticated fund-releasing request to https://api.payclawback.xyz/api/escrows/<id>/release."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "warn",
+      "file": "scripts/resolve-dispute.sh",
+      "line": 17,
+      "message": "resolve-dispute.sh POSTs the release/refund decision to https://api.payclawback.xyz/api/escrows/<id>/resolve with no authentication."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "warn",
+      "file": "scripts/claim-expired.sh",
+      "line": 14,
+      "message": "claim-expired.sh POSTs a fund-claim request to https://api.payclawback.xyz/api/escrows/<id>/claim-expired."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "warn",
+      "file": "scripts/dispute-escrow.sh",
+      "line": 14,
+      "message": "dispute-escrow.sh POSTs a dispute request to https://api.payclawback.xyz/api/escrows/<id>/dispute."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "warn",
+      "file": "scripts/get-escrow.sh",
+      "line": 14,
+      "message": "get-escrow.sh GETs escrow details from https://api.payclawback.xyz/api/escrows/<id>."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "references/api-docs.md",
+      "line": 213,
+      "message": "The docs state that only the arbiter server wallet can resolve disputes and that the server wallet approves USDC spending, so custody and the arbiter key sit with the third-party backend rather than the operator."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "skill-card.md",
+      "line": 24,
+      "message": "The skill card itself notes that create, release, resolve and claim commands move funds through unauthenticated API calls, so anyone who can reach the endpoint can trigger them."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "references/api-docs.md",
+      "line": 371,
+      "message": "The docs describe Base Sepolia (chain ID 84532) while SKILL.md markets the skill as USDC on Base, a network mismatch between the two files."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "skill-card.md",
+      "line": 13,
+      "message": "The License/Terms of Use section is empty, leaving usage terms unspecified."
+    }
+  ],
+  "reviewedAt": "2026-11-03"
+}
