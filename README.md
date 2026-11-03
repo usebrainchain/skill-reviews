@@ -56,8 +56,8 @@ A warning stops a non-interactive install until it is approved. To approve after
 
 A review reports what the release's files show: the keys and wallets it asks for, the environment variables it reads
 that its metadata does not declare, the hosts it talks to, and any code it fetches or decodes and runs. It does not
-watch the skill run, so it cannot see code the skill downloads later. Reviews published so far were done on
-BrainChain testnet.
+watch the skill run, so it cannot see code the skill downloads later. Each review says which network it ran on; the
+first ones were done on BrainChain testnet while the review format was proven.
 
 ## Review files
 
