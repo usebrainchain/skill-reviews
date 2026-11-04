@@ -1,0 +1,74 @@
+{
+  "release": {
+    "registry": "clawhub",
+    "owner": "travislius",
+    "slug": "trading-brain",
+    "version": "1.0.0"
+  },
+  "files": "sha256:d22f3857ff56441f937014ce857d1cfe56e46a84782eaf379bef25209f4648fa",
+  "network": "mainnet",
+  "task": 19,
+  "order": "0x0fe11228326a0581ee8d5443a2774666c1b53d1b0532c009811bbf199339aac2",
+  "record": "https://brain.usebrainchain.com/records/0x77e6679b8fd4d15581bf089ca3c50d8d98627177d64ff0ffa977cf3b1934b051.txt",
+  "verify": "npx brainchain-verify mainnet --task 19",
+  "summary": "The skill is a prompt-only document that loads Travis's personal trading strategy, risk rules and next-wave research method into the session. It tells the agent to run a local Serper search script, read Alpaca-linked config and local memory files, and write trade notes. It declares no env vars, keys, wallets or binaries, yet it implies Serper and Alpaca credentials and scans external sources (X, Polymarket, Reddit, SCMP/FT).",
+  "findings": [
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 49,
+      "message": "Instructs running ~/clawd/integrations/serper/search.sh, a Serper (Google News) search that implies an undeclared API key and an external script not shipped in the release, while requires.env declares nothing."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 49,
+      "message": "Search queries go to the Serper (Google News) service through the local script, so query text is sent to that third-party host."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 50,
+      "message": "Tells the agent to scan X/Twitter, Polymarket, Reddit and SCMP/FT (lines 50-53) for signals, which means contacting those external hosts."
+    },
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 125,
+      "message": "Says to update current positions from Alpaca and reads the trade-bot config.yaml, implying undeclared brokerage API credentials that requires.env does not list."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 126,
+      "message": "Reads ~/Documents/GitHub/trade-bot/config.yaml, a local file outside the skill that likely holds brokerage credentials, and none of this is declared in metadata."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 130,
+      "message": "Directs the agent toward real-money trading decisions, with $5K per trade on Account 2 (lines 130-133) and aggressive goals on Account 1, with no explicit human-confirmation step."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 141,
+      "message": "Writes trade logs to ~/clawd/memory/trades.md and updates TRADING-BRAIN.md and the tracker JSON, which means persistent local file writes outside the skill directory."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 21,
+      "message": "The embedded registry header shows Security SUSPICIOUS with warnings, which conflicts with the Moderate CLEAN status on line 13."
+    }
+  ],
+  "reviewedAt": "2026-11-04"
+}
