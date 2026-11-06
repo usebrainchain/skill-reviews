@@ -16,11 +16,17 @@ if (!dir || !owner || !slug || !version || !["testnet", "mainnet"].includes(netw
   process.exit(1);
 }
 const desk = network === "mainnet" ? "https://brain.usebrainchain.com" : "https://brain.testnet.usebrainchain.com";
-const status = await (await fetch(`${desk}/x402/tasks/${order}`)).json();
-if (!status.task?.accepted || !status.result) throw new Error(`order ${order} has no accepted result`);
-const result = await (await fetch(status.result)).text();
-const code = /```python\n([\s\S]*?)```/.exec(result)?.[1];
-if (!code) throw new Error("the result has no python block");
+// An accepted result is released a little after the grade, so read until its text is there (up to 15 minutes).
+let status, code;
+for (let attempt = 0; attempt < 30 && !code; attempt++) {
+  if (attempt) await new Promise((r) => setTimeout(r, 30_000));
+  status = await (await fetch(`${desk}/x402/tasks/${order}`)).json();
+  if (!status.task?.accepted || !status.result) continue;
+  const result = await (await fetch(status.result)).text();
+  code = /```python\r?\n([\s\S]*?)```/.exec(result)?.[1];
+}
+if (!status?.task?.accepted || !status.result) throw new Error(`order ${order} has no accepted result`);
+if (!code) throw new Error("the result has no python block after 15 minutes");
 
 // The result is Python literals; read them without running anything.
 const parsed = JSON.parse(execFileSync("python3", ["-I", "-c", `

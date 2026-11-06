@@ -1,0 +1,88 @@
+{
+  "release": {
+    "registry": "clawhub",
+    "owner": "abdhilabs",
+    "slug": "karmabank-usdc",
+    "version": "1.0.0"
+  },
+  "files": "sha256:e497637001ad290e90678597d2984ed8fc6fd12d33094e787d6e8833338bd4c7",
+  "network": "mainnet",
+  "task": 42,
+  "order": "0x3a2ac5035cca812d0ff2db8ae7f829ca097172a270e25816455b6dfc89ae94cb",
+  "record": "https://brain.usebrainchain.com/records/0xc6bc16264b0c07b22f0c95a0af07447857226925a8d6e2d166d886c2e3142d8d.txt",
+  "verify": "npx brainchain-verify mainnet --task 42",
+  "summary": "KarmaBank is a CLI skill that lets an agent register, check a Moltbook karma-based credit tier, borrow and repay testnet USDC, and create Circle wallets. It needs Node/npm to install and build, a MOLTBOOK_API_KEY, a CIRCLE_API_KEY and a CIRCLE_ENTITY_SECRET, and it contacts Moltbook (moltbook.com) and Circle (console.circle.com). The release declares no requires.env, and it pulls a local file dependency from ../skills/circle-wallet.",
+  "findings": [
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 82,
+      "message": "SKILL.md asks for MOLTBOOK_API_KEY, but metadata.openclaw.requires.env declares nothing."
+    },
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 85,
+      "message": "SKILL.md asks for CIRCLE_API_KEY for real wallet use, and it is not declared in requires.env."
+    },
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 86,
+      "message": "SKILL.md asks for CIRCLE_ENTITY_SECRET, a Circle wallet credential, and it is not declared in requires.env."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 86,
+      "message": "CIRCLE_ENTITY_SECRET is the secret that authorizes Circle developer-controlled wallets, and the skill handles it directly."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 66,
+      "message": "The 'wallet create <name>' command creates a Circle wallet, and borrow and repay commands move USDC funds."
+    },
+    {
+      "ruleId": "undeclared-env",
+      "severity": "info",
+      "file": "README.md",
+      "line": 111,
+      "message": "README.md repeats the CIRCLE_API_KEY and CIRCLE_ENTITY_SECRET configuration, and neither is declared in requires.env."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 108,
+      "message": "The skill uses the Moltbook API (moltbook.com) for karma lookups, and Circle (console.circle.com) for wallets."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "package.json",
+      "line": 65,
+      "message": "The dependency @circle/openclaw-wallet-skill points at an unreviewed local path, file:../skills/circle-wallet, outside the release."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 43,
+      "message": "Setup requires running npm install and npm run build, which executes third-party dependency code and install scripts, and no lockfile is shipped."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "skill-card.md",
+      "line": 40,
+      "message": "The skill-card and package.json state the ISC license, but the registry header states MIT-0."
+    }
+  ],
+  "reviewedAt": "2026-11-06"
+}
