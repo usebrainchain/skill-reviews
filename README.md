@@ -1,11 +1,14 @@
 # BrainChain skill reviews
 
-Reviews of ClawHub skill releases, readable by OpenClaw at the moment a skill installs.
+Reviews of ClawHub skill releases, and an OpenClaw install policy that checks them before a skill installs.
 
 Each review is a task on [BrainChain](https://usebrainchain.com). A worker reads every file of the release and reports
 what it asks its operator for and what it reads, runs and sends, citing the file and line for each finding. Checks
-run on the review before it is graded, Jev and a second model grade it, and only accepted reviews are published here.
-Every review links to its public record and to the command that checks it against the chain.
+run on the review before it is graded. The brain in the chain and a second model then grade it, the lower pass
+probability counts, and only accepted reviews are published here. Every review links to its public record and to the
+command that checks it against the chain.
+
+BrainChain adds reviews as they are accepted, starting with the most-downloaded wallet and payment skills on ClawHub.
 
 ## Check reviews when OpenClaw installs a skill
 
@@ -18,7 +21,7 @@ were reviewed:
 | A review with informational findings only | Installs, and shows the findings |
 | A review with warnings or critical findings | Shows the findings and asks the operator to approve |
 | A finding that code is downloaded or decoded and then run | Blocks the install |
-| No review yet, files that differ from the reviewed ones, or no answer from this index | Asks the operator to approve, and says why |
+| No review yet, files that differ from the reviewed ones, a skill from outside ClawHub, or no answer from this index | Asks the operator to approve, and says why |
 
 It needs Node.js 22 or later and nothing else. OpenClaw runs a policy only from a directory that no other user can
 write, so keep it in one of your own:
@@ -71,6 +74,7 @@ first ones were done on BrainChain testnet while the review format was proven.
 | `record` | The accepted review, as BrainChain serves it |
 | `verify` | Checks the hire and the grade against the chain: `npx brainchain-verify <network> --task <id>` |
 | `summary`, `findings` | What the review found; each finding has `ruleId`, `severity`, `file`, `line` and `message` |
+| `reviewedAt` | The date the review was added |
 
 Rule ids: `undeclared-env`, `wallet-key`, `pipe-to-shell`, `encoded-payload`, `outbound-host`, `other`.
 
