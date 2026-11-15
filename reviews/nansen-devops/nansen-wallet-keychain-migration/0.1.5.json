@@ -1,0 +1,95 @@
+{
+  "release": {
+    "registry": "clawhub",
+    "owner": "nansen-devops",
+    "slug": "nansen-wallet-keychain-migration",
+    "version": "0.1.5"
+  },
+  "files": "sha256:0775115b562654db80bda4f44695cc14bb12e983d68f897f8a6bfb2ee8b0f9ee",
+  "network": "mainnet",
+  "task": 50,
+  "order": "0x485a7777cfd6ce1b3ad2b336a28b89661679fcf14fca04f75a5a7fa5de4d3676",
+  "record": "https://brain.usebrainchain.com/records/0xd6e3a43c3caa1c6be27f6905261bd6f3ce7e282f672de244a0748cc0ee580416.txt",
+  "verify": "npx brainchain-verify mainnet --task 50",
+  "summary": "This skill guides an agent through migrating a nansen-cli wallet password from a ~/.nansen/.env file or a .credentials file into the OS keychain. It does this with the `nansen` CLI (`wallet secure`, `wallet export --reveal`, `forget-password`, `auth status`, `doctor`), and it installs the npm package nansen-cli. It handles the wallet password (NANSEN_WALLET_PASSWORD) and decrypts the wallet's private keys for verification, with output discarded. It also relies on NANSEN_API_KEY or a browser session. requires.env declares nothing, and the files name no outbound host other than a github.com documentation link.",
+  "findings": [
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 36,
+      "message": "NANSEN_API_KEY is set as primaryEnv, and line 45 says it takes precedence, yet metadata.openclaw.requires declares only the nansen binary and no env vars."
+    },
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 81,
+      "message": "The workflow depends on the NANSEN_WALLET_PASSWORD environment variable (also lines 112, 172, 194), which is a wallet-decrypting secret that requires.env does not declare."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "critical",
+      "file": "SKILL.md",
+      "line": 91,
+      "message": "Step 1 has the agent ask the human for the wallet password, or read it from ~/.nansen/.env if authorized, so the agent handles a credential that decrypts the wallet's private keys."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "critical",
+      "file": "SKILL.md",
+      "line": 103,
+      "message": "The `source ~/.nansen/.env && nansen wallet secure` command executes the env file as shell code and exports the wallet password into the process, and the skill-card's own mitigation (line 58) warns against sourcing credential files."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 113,
+      "message": "Verification runs `nansen wallet export default --reveal`, which decrypts the wallet's private keys; the output goes to /dev/null, but the command still loads key material and the same pattern recurs on lines 141, 156, 186 and 220."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 172,
+      "message": "Wallet creation and re-secure commands (also line 194) pass a user-supplied wallet password inline as NANSEN_WALLET_PASSWORD=..., which exposes it to shell history and the process environment."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 41,
+      "message": "allowed-tools grants only Bash(nansen:*), but the instructions also run source, ls, rm -f, unset and shell conditionals, including deleting ~/.nansen/.env on line 123, which go beyond the declared tool scope."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 38,
+      "message": "The install block pulls the npm package nansen-cli (providing the nansen binary), so the skill installs third-party code from the npm registry."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 45,
+      "message": "The authentication paragraph describes a nansen:api browser-session login as an alternative to the API key and links to a github.com doc, while the only declared requirement is the nansen binary."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 21,
+      "message": "The inspect header shows Moderate CLEAN on line 13 but Security SUSPICIOUS with warnings on line 21, so the registry's own signals disagree."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "skill-card.md",
+      "line": 64,
+      "message": "The skill card admits the security assessment is incomplete because two local references were unresolved, and also notes the migration steps may not reliably complete (line 52)."
+    }
+  ],
+  "reviewedAt": "2026-11-15"
+}
