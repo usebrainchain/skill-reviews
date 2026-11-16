@@ -15,7 +15,11 @@ const release = (files) => {
   }
   return dir;
 };
-const request = (dir) => ({ sourcePath: dir, origin: { type: "clawhub", ownerHandle: "acme", slug: "tool", version: "1.0.0" } });
+const request = (dir) => ({
+  sourcePath: dir,
+  sourcePathKind: "directory",
+  origin: { type: "clawhub", ownerHandle: "acme", slug: "tool", version: "1.0.0" },
+});
 const review = (dir, findings) => async () => ({ files: releaseHash(dir), summary: "s", record: "https://example.test/r.txt", findings });
 const finding = (severity, ruleId = "wallet-key") => ({ ruleId, severity, file: "SKILL.md", line: 3, message: "m" });
 
@@ -105,4 +109,13 @@ test("no review, no ClawHub origin, or no index: warn, never block", async () =>
   assert.match((await decide({ sourcePath: dir, origin: { type: "git" } })).reason, /Not a ClawHub release/);
   const down = await decide(request(dir), async () => { throw new Error("timeout"); });
   assert.equal(down.decision, "warn");
+});
+
+test("no source directory to compare: warn, never allow", async () => {
+  const dir = release({ "SKILL.md": "a" });
+  for (const staged of [{ ...request(dir), sourcePath: undefined }, { ...request(dir), sourcePathKind: "file" }, { ...request(dir), sourcePathKind: undefined }]) {
+    const out = await decide(staged, review(dir, [finding("info", "outbound-host")]));
+    assert.equal(out.decision, "warn");
+    assert.match(out.reason, /not compared/);
+  }
 });

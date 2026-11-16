@@ -5,7 +5,7 @@
 //   reviewed, files match, only info findings   -> allow, with the findings
 //   reviewed, files match, warn or critical     -> warn, with the findings (the operator acknowledges)
 //   a finding that downloads or decodes and runs code -> block
-//   no review, files differ, lookup failed, not from ClawHub -> warn, saying which
+//   no review, files differ or not passed, lookup failed, not from ClawHub -> warn, saying which
 //   a review whose hash leaves out hidden files (sha256:) -> warn at most, even when the files match
 //
 // It never blocks for lack of a review or a network error, and it needs nothing but Node 22.
@@ -79,16 +79,17 @@ export async function decide(request, fetchReview = fetchFromIndex) {
     return answer("warn", `Could not reach BrainChain's reviews (${error.message}); ${release} is unchecked.`);
   }
   if (!review) return answer("warn", `No BrainChain review of ${release} yet.`);
-  const v2 = review.files?.startsWith("sha256v2:");
-  if (request.sourcePath) {
-    let files;
-    try {
-      files = (v2 ? releaseHash : legacyReleaseHash)(request.sourcePath);
-    } catch (error) {
-      return answer("warn", `Could not hash the files of ${release} (${error.message}).`);
-    }
-    if (files !== review.files) return answer("warn", `The files of ${release} differ from the ones BrainChain reviewed.`);
+  if (!request.sourcePath || request.sourcePathKind !== "directory") {
+    return answer("warn", `OpenClaw did not pass the files of ${release} as a directory, so they were not compared with the reviewed ones.`);
   }
+  const v2 = review.files?.startsWith("sha256v2:");
+  let files;
+  try {
+    files = (v2 ? releaseHash : legacyReleaseHash)(request.sourcePath);
+  } catch (error) {
+    return answer("warn", `Could not hash the files of ${release} (${error.message}).`);
+  }
+  if (files !== review.files) return answer("warn", `The files of ${release} differ from the ones BrainChain reviewed.`);
   const findings = review.findings.map((f) => ({
     ruleId: `brainchain/${f.ruleId}`,
     severity: f.severity,
