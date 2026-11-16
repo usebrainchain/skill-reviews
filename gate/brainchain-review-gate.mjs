@@ -14,7 +14,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const INDEX = process.env.BRAINCHAIN_REVIEWS_URL ?? "https://raw.githubusercontent.com/usebrainchain/skill-reviews/main/reviews";
+const INDEX = "https://raw.githubusercontent.com/usebrainchain/skill-reviews/main/reviews";
 const CLAWHUB = "https://clawhub.ai";
 const BLOCKING = new Set(["pipe-to-shell", "encoded-payload"]);
 // ClawHub adds _meta.json to every download; it is not part of what the publisher wrote.
