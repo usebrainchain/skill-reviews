@@ -19,6 +19,13 @@ const CLAWHUB = "https://clawhub.ai";
 const BLOCKING = new Set(["pipe-to-shell", "encoded-payload"]);
 // ClawHub adds _meta.json to every download; it is not part of what the publisher wrote.
 const SKIP = new Set(["_meta.json"]);
+// OpenClaw blocks outright a warning with more than 100 findings, or one whose notice runs past 4,000 characters. The
+// notice is its title, the skill's name, the reason, a line per finding and its recovery guidance; the frame is the
+// title and guidance, under 500 characters, plus room for the note that says how many findings were left out.
+const MAX_FINDINGS = 100;
+const NOTICE_CHARS = 4_000;
+const NOTICE_FRAME = 700;
+const SEVERITY = { critical: 0, warn: 1, info: 2 };
 
 /**
  * sha256v2 over every file of a release, hidden ones included, but ClawHub's top-level _meta.json. Files go in the
@@ -67,6 +74,26 @@ export function legacyReleaseHash(dir) {
 
 const answer = (decision, reason, findings = []) => ({ protocolVersion: 1, decision, ...(reason ? { reason } : {}), findings });
 
+// Characters OpenClaw prints for text: newlines and tabs become two, other control characters none.
+const width = (text) => String(text).replace(/\p{Cc}/gu, "  ").length;
+// A finding as OpenClaw prints it: "    • [WARN] rule: message (file:line)" and a newline.
+const findingWidth = (f) =>
+  12 + width(f.severity) + width(f.ruleId) + width(f.message) + (f.file ? width(f.file) + 3 + (f.line ? String(f.line).length + 1 : 0) : 0);
+
+/** The most severe findings that fit OpenClaw's notice, and a reason that says when some were left out. */
+function fit(reason, findings, name) {
+  const sorted = [...findings].sort((a, b) => (SEVERITY[a.severity] ?? 3) - (SEVERITY[b.severity] ?? 3));
+  let room = NOTICE_CHARS - NOTICE_FRAME - width(name) - width(reason ?? "");
+  const kept = [];
+  for (const f of sorted) {
+    room -= findingWidth(f);
+    if (kept.length === MAX_FINDINGS || room < 0) break;
+    kept.push(f);
+  }
+  const more = kept.length < findings.length ? ` Showing ${kept.length} of ${findings.length} findings; the review lists all of them.` : "";
+  return [reason && `${reason}${more}`, kept];
+}
+
 export async function decide(request, fetchReview = fetchFromIndex, fetchOwner = fetchOwnerFromRegistry) {
   const origin = request.origin ?? {};
   if (origin.type !== "clawhub" || !origin.slug || !origin.version) {
@@ -102,17 +129,18 @@ export async function decide(request, fetchReview = fetchFromIndex, fetchOwner =
     ...(f.file ? { file: f.file } : {}),
     ...(f.line ? { line: f.line } : {}),
   }));
+  const reply = (decision, reason) => answer(decision, ...fit(reason, findings, request.targetName ?? origin.slug));
   const link = `Review: ${review.record}`;
   if (review.findings.some((f) => BLOCKING.has(f.ruleId))) {
-    return answer("block", `BrainChain's review of ${release} found code that is downloaded or decoded and run. ${link}`, findings);
+    return reply("block", `BrainChain's review of ${release} found code that is downloaded or decoded and run. ${link}`);
   }
   if (!v2 || review.findings.some((f) => f.severity !== "info")) {
     const critical = review.findings.filter((f) => f.severity === "critical").length;
     const counts = `${review.findings.length} findings${critical ? `, ${critical} critical` : ""}`;
     const hidden = v2 ? "" : " This review's file hash leaves out hidden files, so those were not compared.";
-    return answer("warn", `BrainChain reviewed ${release}: ${counts}.${hidden} ${link}`, findings);
+    return reply("warn", `BrainChain reviewed ${release}: ${counts}.${hidden} ${link}`);
   }
-  return answer("allow", undefined, findings);
+  return reply("allow");
 }
 
 // Each lookup gets 4 seconds, so both fit in the 10 seconds OpenClaw gives a policy by default.

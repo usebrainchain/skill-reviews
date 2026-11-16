@@ -159,3 +159,42 @@ test("the registry cannot say who publishes the slug: warn", async () => {
   assert.equal(out.decision, "warn");
   assert.match(out.reason, /weather 1\.0\.0 \(ClawHub answered 404\)/);
 });
+
+// OpenClaw's warning notice, as formatInstallPolicyNotice in openclaw 2026.11.4 renders it; past 4,000 characters it blocks.
+const GUIDANCE = [
+  "This invocation cannot approve install policy warnings.",
+  "To continue:",
+  "  • Run the matching direct `openclaw plugins ...` or `openclaw skills ...` command interactively.",
+  "  • For reviewed direct CLI automation, add --acknowledge-install-policy-warning.",
+  "  • If no equivalent direct command exists, change security.installPolicy to allow this reviewed request, then retry.",
+  "  • --force does not approve install policy warnings.",
+];
+const notice = (name, out) => {
+  const text = (value) => String(value).replace(/\p{Cc}/gu, (c) => ({ "\n": "\\n", "\r": "\\r", "\t": "\\t" })[c] ?? "");
+  const line = (f) => `    • [${f.severity.toUpperCase()}] ${text(f.ruleId)}: ${text(f.message)}${f.file ? ` (${text(f.file)}${f.line ? `:${f.line}` : ""})` : ""}`;
+  const findings = out.findings.length ? ["  Findings:", ...out.findings.map(line)] : [];
+  return ["Install requires approval", "", `  Skill: ${text(name)}`, `  Reason: ${text(out.reason)}`, ...findings, "", ...GUIDANCE].join("\n");
+};
+
+test("a long review stays within OpenClaw's limits, most severe findings first", async () => {
+  const dir = release({ "SKILL.md": "a" });
+  const many = [...Array.from({ length: 150 }, () => finding("info", "outbound-host")), finding("critical")];
+  const out = await decide(request(dir), review(dir, many));
+  assert.equal(out.decision, "warn");
+  assert.ok(out.findings.length <= 100);
+  assert.equal(out.findings[0].severity, "critical");
+  assert.match(out.reason, new RegExp(`Showing ${out.findings.length} of 151 findings`));
+  assert.ok(notice("tool", out).length <= 4_000);
+
+  const wordy = Array.from({ length: 12 }, () => ({ ...finding("warn"), message: "line\n".repeat(150) }));
+  const long = await decide(request(dir), review(dir, wordy));
+  assert.ok(long.findings.length < 12);
+  assert.ok(notice("tool", long).length <= 4_000);
+});
+
+test("a review that fits keeps every finding and its reason", async () => {
+  const dir = release({ "SKILL.md": "a" });
+  const out = await decide(request(dir), review(dir, Array.from({ length: 14 }, () => ({ ...finding("warn"), message: "m".repeat(150) }))));
+  assert.equal(out.findings.length, 14);
+  assert.doesNotMatch(out.reason, /Showing/);
+});

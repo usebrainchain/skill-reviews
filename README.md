@@ -23,6 +23,9 @@ were reviewed. When the install names a bare slug rather than `@owner/slug`, it 
 | A finding that code is downloaded or decoded and then run | Blocks the install |
 | No review yet, a review whose file hash leaves out hidden files, files that differ from the reviewed ones, a skill from outside ClawHub, or no answer from this index or ClawHub | Asks the operator to approve, and says why |
 
+OpenClaw refuses a warning longer than 4,000 characters or with more than 100 findings, so for a long review the
+policy shows the most severe findings that fit and says how many the review has.
+
 It needs Node.js 22 or later and nothing else. OpenClaw runs a policy only from a directory that no other user can
 write, so keep it in one of your own:
 
