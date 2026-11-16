@@ -24,6 +24,10 @@ if several publishers use that slug, it asks the operator to install the skill a
 | A finding that code is downloaded or decoded and then run | Blocks the install |
 | No review yet, a review whose file hash leaves out hidden files, files that differ from the reviewed ones, a skill from outside ClawHub, or no answer from this index or ClawHub | Asks the operator to approve, and says why |
 
+The policy answers `allow` only when BrainChain has published a review of that exact owner, slug and version, the
+review's `files` hash is `sha256v2` and matches the files OpenClaw passed, and every finding is informational, with
+none for code that is downloaded or decoded and run. Anything else is a warning or a block, with the reason.
+
 OpenClaw refuses a warning longer than 4,000 characters or with more than 100 findings, so for a long review the
 policy shows the most severe findings that fit and says how many the review has.
 
@@ -58,6 +62,52 @@ Then add the policy to `~/.openclaw/openclaw.json`, with the full path to the fi
 
 A warning stops a non-interactive install until it is approved. To approve after reading the findings, run the same
 `openclaw skills install` command interactively, or add `--acknowledge-install-policy-warning`.
+
+### Run it by hand
+
+The policy reads one request on stdin and writes one answer on stdout, so you can try it on a reviewed release without
+OpenClaw. Download the release from ClawHub into a new directory:
+
+```sh
+cd "$(mktemp -d)"
+curl -fsSL "https://clawhub.ai/api/v1/download?slug=trust-escrow&ownerHandle=droppingbeans&version=1.0.0" -o release.zip
+unzip -q release.zip -d release
+```
+
+For another release, change `slug`, `ownerHandle` and `version`. ClawHub needs `ownerHandle` only when more than one
+publisher uses the slug.
+
+Then send the policy a request shaped like the one OpenClaw sends:
+
+```sh
+cat > request.json <<EOF
+{
+  "sourcePath": "$PWD/release",
+  "sourcePathKind": "directory",
+  "origin": { "type": "clawhub", "ownerHandle": "droppingbeans", "slug": "trust-escrow", "version": "1.0.0" }
+}
+EOF
+node ~/.openclaw/policy/brainchain-review-gate.mjs < request.json
+```
+
+The answer is one line of JSON, formatted and shortened here:
+
+```json
+{
+  "protocolVersion": 1,
+  "decision": "warn",
+  "reason": "BrainChain reviewed droppingbeans/trust-escrow 1.0.0: 8 findings, 1 critical. Review: https://brain.testnet.usebrainchain.com/records/0xf0e75ef9f2ceebf93660a009c7cd7142e53334879e405b1dbf8c2b0ae693a606.txt",
+  "findings": [
+    {
+      "ruleId": "brainchain/wallet-key",
+      "severity": "critical",
+      "message": "The workflow example calls privateKeyToAccount('0xYOUR_PRIVATE_KEY'), instructing the operator to supply a raw wallet private key for signing transactions in plaintext.",
+      "file": "SKILL.md",
+      "line": 216
+    }
+  ]
+}
+```
 
 ## What a review covers
 
