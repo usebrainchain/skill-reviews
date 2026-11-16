@@ -1,12 +1,13 @@
 # BrainChain skill reviews
 
-Reviews of ClawHub skill releases, and an OpenClaw install policy that checks them before a skill installs.
+Before OpenClaw installs a ClawHub skill, find out what it asks you for and what its files read, run and send. This
+repository holds BrainChain's reviews of skill releases, and an OpenClaw install policy that checks each install
+against them.
 
-Each review is a task on [BrainChain](https://usebrainchain.com). A worker reads every file of the release and reports
-what it asks its operator for and what it reads, runs and sends, citing the file and line for each finding. Checks
-run on the review before it is graded. The brain in the chain and a second model then grade it, the lower pass
-probability counts, and only accepted reviews are published here. Every review links to its public record and to the
-command that checks it against the chain.
+Each review is a task on [BrainChain](https://usebrainchain.com). A worker reads every file in the release and cites
+the file and line for each finding. Checks run on the review before it is graded. The brain in the chain and a second
+model then grade it, and the lower pass probability counts. Only accepted reviews are published here, and each one
+links to its public record and to the command that checks it against the chain.
 
 BrainChain adds reviews as they are accepted, starting with the most-downloaded wallet and payment skills on ClawHub.
 
@@ -113,8 +114,8 @@ The answer is one line of JSON, formatted and shortened here:
 
 A review reports what the release's files show: the keys and wallets it asks for, the environment variables it reads
 that its metadata does not declare, the hosts it talks to, and any code it fetches or decodes and runs. It does not
-watch the skill run, so it cannot see code the skill downloads later. Each review says which network it ran on; the
-first ones were done on BrainChain testnet while the review format was proven.
+watch the skill run, so it cannot see code the skill downloads later. Each review names the network it ran on; the
+first ones ran on BrainChain testnet.
 
 ## Review files
 
