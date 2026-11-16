@@ -10,7 +10,7 @@
 //
 // It never blocks for lack of a review or a network error, and it needs nothing but Node 22.
 import { createHash } from "node:crypto";
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, realpathSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -163,7 +163,17 @@ async function fetchFromIndex(owner, slug, version) {
   return response.json();
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+// Node resolves symbolic links in this module's URL but not in argv[1], so run through a linked path (/tmp on macOS)
+// the two differ unless argv[1] is resolved too.
+const invokedAs = () => {
+  try {
+    return process.argv[1] && realpathSync(process.argv[1]);
+  } catch {
+    return undefined;
+  }
+};
+
+if (fileURLToPath(import.meta.url) === invokedAs()) {
   let input = "";
   for await (const chunk of process.stdin) input += chunk;
   let result;

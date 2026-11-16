@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { decide, legacyReleaseHash, releaseHash } from "./brainchain-review-gate.mjs";
 
@@ -197,4 +199,19 @@ test("a review that fits keeps every finding and its reason", async () => {
   const out = await decide(request(dir), review(dir, Array.from({ length: 14 }, () => ({ ...finding("warn"), message: "m".repeat(150) }))));
   assert.equal(out.findings.length, 14);
   assert.doesNotMatch(out.reason, /Showing/);
+});
+
+// The gate as OpenClaw runs it: a separate process, the request on stdin, the answer on stdout.
+const GATE = fileURLToPath(new URL("./brainchain-review-gate.mjs", import.meta.url));
+const run = (path, request) => spawnSync(process.execPath, [path], { input: JSON.stringify(request), encoding: "utf8", timeout: 15_000 });
+
+test("run through a symbolic link, the gate still answers", () => {
+  const links = mkdtempSync(join(tmpdir(), "gate-"));
+  symlinkSync(GATE, join(links, "gate.mjs"));
+  symlinkSync(dirname(GATE), join(links, "dir"));
+  for (const path of [join(links, "gate.mjs"), join(links, "dir", "brainchain-review-gate.mjs")]) {
+    const out = run(path, { origin: { type: "git" } });
+    assert.equal(out.status, 0, path);
+    assert.match(JSON.parse(out.stdout).reason, /Not a ClawHub release/, path);
+  }
 });
