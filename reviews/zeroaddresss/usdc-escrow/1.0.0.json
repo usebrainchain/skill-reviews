@@ -5,7 +5,7 @@
     "slug": "usdc-escrow",
     "version": "1.0.0"
   },
-  "files": "sha256:dad1bfbb5acbc8373f754dc2a2bd18a886d47d37865a20482ff00b8deef395c8",
+  "files": "sha256v2:e5e436255ec0131306922ce66ea8e98961886445a34557514089213c5ee7bafd",
   "network": "mainnet",
   "board": "0x8385bb4b8990411ccdd8e851b2676da1a4c1f3c4",
   "task": 3,

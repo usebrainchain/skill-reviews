@@ -5,7 +5,7 @@
     "slug": "x402",
     "version": "1.0.0"
   },
-  "files": "sha256:bfd672b09277b4ee554b98fe7a330d53027671c16ab00ec5f81aa57b61d14a3c",
+  "files": "sha256v2:e3c9fc76018a7474c8d0be6a21098b52673086aec3483e849f65069d9dcec02a",
   "network": "testnet",
   "board": "0x67e0c5f884e1df61ac585b6d158c6e8175956ad1",
   "task": 9,

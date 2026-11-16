@@ -5,7 +5,7 @@
     "slug": "trust-escrow",
     "version": "1.0.0"
   },
-  "files": "sha256:ab0c4fea27f6e4b8e325f2c8e8e66e5cacc8c7df9fba79da9f2fdf7804ac3d28",
+  "files": "sha256v2:1065b8c8e0c6305497ff5ccdcd162084949e95da3bd2aa9173150cb03f289f60",
   "network": "testnet",
   "board": "0x67e0c5f884e1df61ac585b6d158c6e8175956ad1",
   "task": 8,
