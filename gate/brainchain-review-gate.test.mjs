@@ -38,9 +38,13 @@ test("a warning or critical finding: warn with counts and the record", async () 
   assert.match(out.reason, /2 findings, 1 critical\. Review: https:\/\/example\.test\/r\.txt/);
 });
 
-test("code downloaded or decoded and run: block", async () => {
+test("code downloaded or decoded and run: block, at any severity", async () => {
   const dir = release({ "SKILL.md": "a" });
-  assert.equal((await decide(request(dir), review(dir, [finding("critical", "pipe-to-shell")]))).decision, "block");
+  for (const severity of ["critical", "warn", "info"]) {
+    for (const rule of ["pipe-to-shell", "encoded-payload"]) {
+      assert.equal((await decide(request(dir), review(dir, [finding(severity, rule)]))).decision, "block", `${severity} ${rule}`);
+    }
+  }
 });
 
 test("files that differ from the reviewed ones: warn", async () => {

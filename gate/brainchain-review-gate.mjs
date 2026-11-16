@@ -103,7 +103,7 @@ export async function decide(request, fetchReview = fetchFromIndex, fetchOwner =
     ...(f.line ? { line: f.line } : {}),
   }));
   const link = `Review: ${review.record}`;
-  if (review.findings.some((f) => f.severity === "critical" && BLOCKING.has(f.ruleId))) {
+  if (review.findings.some((f) => BLOCKING.has(f.ruleId))) {
     return answer("block", `BrainChain's review of ${release} found code that is downloaded or decoded and run. ${link}`, findings);
   }
   if (!v2 || review.findings.some((f) => f.severity !== "info")) {
