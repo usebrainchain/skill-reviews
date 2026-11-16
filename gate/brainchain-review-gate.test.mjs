@@ -98,7 +98,7 @@ test("a review in the first hash format: warn even when the files match, since h
   const legacy = (findings) => async () => ({ files: legacyReleaseHash(dir), record: "https://example.test/r.txt", findings });
   const out = await decide(request(dir), legacy([finding("info", "outbound-host")]));
   assert.equal(out.decision, "warn");
-  assert.match(out.reason, /1 findings\. This review's file hash leaves out hidden files, so these were not compared: \.postinstall\.sh\./);
+  assert.match(out.reason, /1 finding\. This review's file hash leaves out hidden files, so these were not compared: \.postinstall\.sh\./);
   assert.equal((await decide(request(dir), legacy([finding("critical", "pipe-to-shell")]))).decision, "block");
 });
 
@@ -309,7 +309,7 @@ test("any other conflict from ClawHub: warn with its status", async () => {
   const clawhub = await registry((_, response) => response.writeHead(409).end("busy"));
   try {
     const out = await decide({ ...documented, origin: { ...documented.origin, registry: clawhub.url } }, async () => assert.fail("looked up a review"));
-    assert.match(out.reason, /weather 1\.0\.0 \(ClawHub answered 409\), so it is unchecked/);
+    assert.match(out.reason, /weather 1\.0\.0 \(ClawHub answered 409\), so the release is unchecked/);
   } finally {
     clawhub.close();
   }

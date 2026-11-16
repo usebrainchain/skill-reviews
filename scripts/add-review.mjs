@@ -31,7 +31,7 @@ for (let attempt = 0; attempt < 30 && !code; attempt++) {
   if (result.ok) code = /```python\r?\n([\s\S]*?)```/.exec(await result.text())?.[1];
 }
 if (!status?.task?.accepted || !status.result) throw new Error(`order ${order} has no accepted result`);
-if (!code) throw new Error("the result has no python block after 15 minutes");
+if (!code) throw new Error("the result has no Python block after 15 minutes");
 if (!/^\d+$/.test(status.taskId ?? "")) throw new Error(`the desk gave no task id for order ${order}`);
 // Task ids start again with each contract set, so the verify command names the board the task is on.
 if (!/^0x[0-9a-fA-F]{40}$/.test(status.board ?? "")) throw new Error(`the desk did not say which board order ${order} is on`);

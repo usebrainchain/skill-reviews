@@ -1,13 +1,14 @@
 #!/usr/bin/env node
-// An OpenClaw install policy (security.installPolicy) that looks up BrainChain's review of the
-// ClawHub release being installed. It reads OpenClaw's request on stdin and answers on stdout.
+// An OpenClaw install policy (security.installPolicy) that checks the ClawHub release being installed against
+// BrainChain's review of it. It reads OpenClaw's request on stdin and answers on stdout:
 //
-//   reviewed, files match, only info findings   -> allow, with the findings
-//   reviewed, files match, warn or critical     -> warn, with the findings (the operator acknowledges)
-//   a finding that downloads or decodes and runs code -> block
-//   no review, files differ or not passed, lookup failed, not from ClawHub -> warn, saying which
-//   a bare slug that more than one publisher uses -> warn, asking for an @owner/slug install
-//   a review whose hash leaves out hidden files (sha256:) -> warn at most, naming the hidden files the release has
+//   reviewed, files match, info findings only            -> allow, with the findings
+//   reviewed, files match, warn or critical findings     -> warn, with the findings, for the operator to approve
+//   code downloaded or decoded and run, at any severity  -> block
+//   an older review whose hash leaves out hidden files   -> warn at most, naming the hidden files the release has
+//   a bare slug that more than one publisher uses        -> warn, asking for an @owner/slug install
+//   no review, files differ or missing, lookup failed    -> warn, saying which
+//   not from ClawHub                                     -> warn
 //
 // It never blocks for lack of a review or a network error, and it needs nothing but Node 22.
 import { createHash } from "node:crypto";
@@ -31,7 +32,7 @@ const SEVERITY = { critical: 0, warn: 1, info: 2 };
 const HIDDEN_NAMED = 5;
 
 /**
- * sha256v2 over every file of a release, hidden ones included, but ClawHub's top-level _meta.json. Files go in the
+ * sha256v2 over every file of a release, hidden ones included, except ClawHub's top-level _meta.json. Files go in the
  * byte order of their UTF-8 paths, and each adds its path's length, the path, its size and its bytes, both lengths
  * as 8-byte big-endian integers. Paths are relative to the release, with "/" between directories.
  */
@@ -55,7 +56,7 @@ const length = (bytes) => {
 };
 
 // Every file under dir, by "/"-separated relative path. A link's target can sit outside the release, where no review
-// reached, so a link is an error rather than something to follow.
+// reached, so a link is an error.
 function filesIn(dir, prefix = "") {
   return readdirSync(join(dir, prefix), { withFileTypes: true }).flatMap((entry) => {
     const path = prefix ? `${prefix}/${entry.name}` : entry.name;
@@ -136,10 +137,10 @@ export async function decide(request, fetchReview = fetchFromIndex, fetchOwner =
     if (error instanceof AmbiguousSlug) {
       return answer(
         "warn",
-        `ClawHub has more than one skill called ${origin.slug}, so BrainChain cannot tell whose review applies and the release is unchecked. Install it as @owner/${origin.slug}, with the publisher's ClawHub handle, so the review can be matched.`,
+        `ClawHub has more than one skill called ${origin.slug}, so BrainChain cannot tell whose review applies and the release is unchecked. Install it as @owner/${origin.slug}, using the publisher's ClawHub handle, to have it checked.`,
       );
     }
-    return answer("warn", `Could not look up BrainChain's review of ${release} (${error.message}), so it is unchecked.`);
+    return answer("warn", `Could not look up BrainChain's review of ${release} (${error.message}), so the release is unchecked.`);
   }
   if (!review) return answer("warn", `No BrainChain review of ${release} yet.`);
   if (!request.sourcePath || request.sourcePathKind !== "directory") {
@@ -152,7 +153,7 @@ export async function decide(request, fetchReview = fetchFromIndex, fetchOwner =
     files = (v2 ? releaseHash : legacyReleaseHash)(request.sourcePath);
     if (!v2) hidden = hiddenIn(request.sourcePath);
   } catch (error) {
-    return answer("warn", `Could not hash the files of ${release} (${error.message}).`);
+    return answer("warn", `Could not hash the files of ${release} (${error.message}), so they were not compared with the reviewed ones.`);
   }
   if (files !== review.files) return answer("warn", `The files of ${release} differ from the ones BrainChain reviewed.`);
   const findings = review.findings.map((f) => ({
@@ -169,7 +170,8 @@ export async function decide(request, fetchReview = fetchFromIndex, fetchOwner =
   }
   if (!v2 || review.findings.some((f) => f.severity !== "info")) {
     const critical = review.findings.filter((f) => f.severity === "critical").length;
-    const counts = `${review.findings.length} findings${critical ? `, ${critical} critical` : ""}`;
+    const total = review.findings.length;
+    const counts = `${total} ${total === 1 ? "finding" : "findings"}${critical ? `, ${critical} critical` : ""}`;
     const note = v2 ? "" : ` ${uncovered(hidden)}`;
     return reply("warn", `BrainChain reviewed ${release}: ${counts}.${note} ${link}`);
   }
@@ -195,12 +197,12 @@ async function fetchFromIndex(owner, slug, version) {
     signal: AbortSignal.timeout(4_000),
   });
   if (response.status === 404) return undefined;
-  if (!response.ok) throw new Error(`index answered ${response.status}`);
+  if (!response.ok) throw new Error(`the review index answered ${response.status}`);
   return response.json();
 }
 
-// Node resolves symbolic links in this module's URL but not in argv[1], so run through a linked path (/tmp on macOS)
-// the two differ unless argv[1] is resolved too.
+// Node resolves symbolic links in this module's URL but not in argv[1], so when the gate runs from a linked path
+// (/tmp on macOS) the two differ unless argv[1] is resolved too.
 const invokedAs = () => {
   try {
     return process.argv[1] && realpathSync(process.argv[1]);
