@@ -182,5 +182,8 @@ if (fileURLToPath(import.meta.url) === invokedAs()) {
   } catch (error) {
     result = answer("warn", `BrainChain's review check failed: ${error.message}`);
   }
-  process.stdout.write(`${JSON.stringify(result)}\n`);
+  // A lookup that timed out can leave its connection attempt open for seconds, past OpenClaw's 10, so exit as soon as
+  // the answer is written rather than when Node runs out of work.
+  process.exitCode = 0;
+  process.stdout.write(`${JSON.stringify(result)}\n`, () => process.exit());
 }

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
+import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
@@ -203,15 +204,47 @@ test("a review that fits keeps every finding and its reason", async () => {
 
 // The gate as OpenClaw runs it: a separate process, the request on stdin, the answer on stdout.
 const GATE = fileURLToPath(new URL("./brainchain-review-gate.mjs", import.meta.url));
-const run = (path, request) => spawnSync(process.execPath, [path], { input: JSON.stringify(request), encoding: "utf8", timeout: 15_000 });
+// Settles when the process exits, or after 8 seconds with status null if it has not.
+const run = (path, request) =>
+  new Promise((resolve) => {
+    const started = Date.now();
+    const child = spawn(process.execPath, [path]);
+    let stdout = "";
+    const timer = setTimeout(() => child.kill(), 8_000);
+    child.stdout.on("data", (chunk) => (stdout += chunk));
+    child.on("exit", (status) => {
+      clearTimeout(timer);
+      resolve({ status, stdout, ms: Date.now() - started });
+    });
+    child.stdin.end(JSON.stringify(request));
+  });
 
-test("run through a symbolic link, the gate still answers", () => {
+test("run through a symbolic link, the gate still answers", async () => {
   const links = mkdtempSync(join(tmpdir(), "gate-"));
   symlinkSync(GATE, join(links, "gate.mjs"));
   symlinkSync(dirname(GATE), join(links, "dir"));
   for (const path of [join(links, "gate.mjs"), join(links, "dir", "brainchain-review-gate.mjs")]) {
-    const out = run(path, { origin: { type: "git" } });
+    const out = await run(path, { origin: { type: "git" } });
     assert.equal(out.status, 0, path);
     assert.match(JSON.parse(out.stdout).reason, /Not a ClawHub release/, path);
+  }
+});
+
+test("the gate exits once it has answered, even with a connection still open", async () => {
+  // A registry that answers with an error and never finishes the body, as a stalled connection does.
+  const server = createServer((_, response) => {
+    response.writeHead(503, { "content-length": "100" });
+    response.write("x");
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  try {
+    const registry = `http://127.0.0.1:${server.address().port}`;
+    const out = await run(GATE, { origin: { type: "clawhub", registry, slug: "weather", version: "1.0.0" } });
+    assert.match(JSON.parse(out.stdout).reason, /ClawHub answered 503/);
+    assert.equal(out.status, 0);
+    assert.ok(out.ms < 3_000, `took ${out.ms} ms`);
+  } finally {
+    server.closeAllConnections();
+    server.close();
   }
 });
