@@ -151,25 +151,30 @@ test("no source directory to compare: warn, never allow", async () => {
   }
 });
 
-// OpenClaw's example request from docs.openclaw.ai/tools/skills-config, as published: its origin names no owner.
+// OpenClaw's example request from docs.openclaw.ai/tools/skills-config: its origin names no owner. The docs give the
+// registry as https://clawhub.openclaw.ai, which does not resolve, so the fixture has OpenClaw's real default instead.
 const documented = JSON.parse(readFileSync(new URL("./fixtures/skill-install-request.json", import.meta.url), "utf8"));
 
-test("OpenClaw's documented request: the owner comes from the registry it names", async () => {
+test("OpenClaw's documented request: the owner comes from the registry it names, or from ClawHub", async () => {
   const dir = release({ "SKILL.md": "a" });
-  const asked = [];
-  const out = await decide(
-    { ...documented, sourcePath: dir },
-    async (...lookup) => {
-      asked.push(["review", ...lookup]);
-      return review(dir, [finding("info", "outbound-host")])();
-    },
-    async (...lookup) => {
-      asked.push(["owner", ...lookup]);
-      return "acme";
-    },
-  );
-  assert.equal(out.decision, "allow");
-  assert.deepEqual(asked, [["owner", "https://clawhub.openclaw.ai", "weather"], ["review", "acme", "weather", "1.0.0"]]);
+  assert.equal(documented.origin.registry, "https://clawhub.ai");
+  const { registry: _, ...unnamed } = documented.origin;
+  for (const origin of [documented.origin, unnamed]) {
+    const asked = [];
+    const out = await decide(
+      { ...documented, origin, sourcePath: dir },
+      async (...lookup) => {
+        asked.push(["review", ...lookup]);
+        return review(dir, [finding("info", "outbound-host")])();
+      },
+      async (...lookup) => {
+        asked.push(["owner", ...lookup]);
+        return "acme";
+      },
+    );
+    assert.equal(out.decision, "allow");
+    assert.deepEqual(asked, [["owner", "https://clawhub.ai", "weather"], ["review", "acme", "weather", "1.0.0"]]);
+  }
 });
 
 test("an owner-qualified install names the owner, so the registry is not asked", async () => {
