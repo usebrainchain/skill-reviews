@@ -21,7 +21,7 @@ were reviewed:
 | A review with informational findings only | Installs, and shows the findings |
 | A review with warnings or critical findings | Shows the findings and asks the operator to approve |
 | A finding that code is downloaded or decoded and then run | Blocks the install |
-| No review yet, files that differ from the reviewed ones, a skill from outside ClawHub, or no answer from this index | Asks the operator to approve, and says why |
+| No review yet, a review whose file hash leaves out hidden files, files that differ from the reviewed ones, a skill from outside ClawHub, or no answer from this index | Asks the operator to approve, and says why |
 
 It needs Node.js 22 or later and nothing else. OpenClaw runs a policy only from a directory that no other user can
 write, so keep it in one of your own:
@@ -69,7 +69,7 @@ first ones were done on BrainChain testnet while the review format was proven.
 | Field | Meaning |
 | --- | --- |
 | `release` | The ClawHub owner, slug and version reviewed |
-| `files` | sha256 over the release's files by sorted path, without the `_meta.json` ClawHub adds to every download |
+| `files` | A hash of every file in the release, hidden files included; see below |
 | `network`, `board`, `task`, `order` | Where the review was done and paid for. Task ids start again with each contract set, so `board` names the TaskBoard the task is on |
 | `record` | The accepted review, as BrainChain serves it |
 | `verify` | Checks the hire and the grade against the chain: `npx brainchain-verify <network> --task <id> --set <board>` |
@@ -77,6 +77,13 @@ first ones were done on BrainChain testnet while the review format was proven.
 | `reviewedAt` | The date the review was added |
 
 Rule ids: `undeclared-env`, `wallet-key`, `pipe-to-shell`, `encoded-payload`, `outbound-host`, `other`.
+
+`files` is `sha256v2:` and the hex SHA-256 of every file in the release except the `_meta.json` ClawHub adds at the
+top of every download. Hidden files and files in hidden directories count. Files go in the byte order of their UTF-8
+paths, which are relative to the release with `/` between directories, and each adds four parts: its path's length,
+the path, its size and its bytes, with both lengths as 8-byte big-endian integers. A release that contains a symbolic
+link has no hash. Older reviews carry the first format, `sha256:`, which left hidden files out, so for those the
+policy asks the operator to approve even when the files match.
 
 ## License
 
