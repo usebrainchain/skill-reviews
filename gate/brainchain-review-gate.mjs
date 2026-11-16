@@ -6,6 +6,7 @@
 //   reviewed, files match, warn or critical     -> warn, with the findings (the operator acknowledges)
 //   a finding that downloads or decodes and runs code -> block
 //   no review, files differ or not passed, lookup failed, not from ClawHub -> warn, saying which
+//   a bare slug that more than one publisher uses -> warn, asking for an @owner/slug install
 //   a review whose hash leaves out hidden files (sha256:) -> warn at most, naming the hidden files the release has
 //
 // It never blocks for lack of a review or a network error, and it needs nothing but Node 22.
@@ -115,6 +116,9 @@ function fit(reason, findings, name) {
   return [reason && `${reason}${more}`, kept];
 }
 
+/** ClawHub has several skills by the slug, so it cannot say whose release a bare-slug install is. */
+class AmbiguousSlug extends Error {}
+
 export async function decide(request, fetchReview = fetchFromIndex, fetchOwner = fetchOwnerFromRegistry) {
   const origin = request.origin ?? {};
   if (origin.type !== "clawhub" || !origin.slug || !origin.version) {
@@ -129,6 +133,12 @@ export async function decide(request, fetchReview = fetchFromIndex, fetchOwner =
     release = `${owner}/${release}`;
     review = await fetchReview(owner, origin.slug, origin.version);
   } catch (error) {
+    if (error instanceof AmbiguousSlug) {
+      return answer(
+        "warn",
+        `ClawHub has more than one skill called ${origin.slug}, so BrainChain cannot tell whose review applies and the release is unchecked. Install it as @owner/${origin.slug}, with the publisher's ClawHub handle, so the review can be matched.`,
+      );
+    }
     return answer("warn", `Could not look up BrainChain's review of ${release} (${error.message}), so it is unchecked.`);
   }
   if (!review) return answer("warn", `No BrainChain review of ${release} yet.`);
@@ -171,6 +181,9 @@ async function fetchOwnerFromRegistry(registry, slug) {
   const response = await fetch(`${registry.replace(/\/+$/, "")}/api/v1/skills/${encodeURIComponent(slug)}`, {
     signal: AbortSignal.timeout(4_000),
   });
+  if (response.status === 409 && (await response.json().catch(() => undefined))?.code === "AMBIGUOUS_SKILL_SLUG") {
+    throw new AmbiguousSlug(`more than one skill is called ${slug}`);
+  }
   if (!response.ok) throw new Error(`ClawHub answered ${response.status}`);
   const owner = (await response.json())?.owner?.handle;
   if (typeof owner !== "string" || !owner) throw new Error("ClawHub named no owner");

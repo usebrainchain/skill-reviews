@@ -254,21 +254,58 @@ test("run through a symbolic link, the gate still answers", async () => {
   }
 });
 
+// A local stand-in for ClawHub; its url goes in origin.registry.
+const registry = async (handler) => {
+  const server = createServer(handler);
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  return {
+    url: `http://127.0.0.1:${server.address().port}`,
+    close: () => {
+      server.closeAllConnections();
+      server.close();
+    },
+  };
+};
+
 test("the gate exits once it has answered, even with a connection still open", async () => {
   // A registry that answers with an error and never finishes the body, as a stalled connection does.
-  const server = createServer((_, response) => {
+  const stalled = await registry((_, response) => {
     response.writeHead(503, { "content-length": "100" });
     response.write("x");
   });
-  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   try {
-    const registry = `http://127.0.0.1:${server.address().port}`;
-    const out = await run(GATE, { origin: { type: "clawhub", registry, slug: "weather", version: "1.0.0" } });
+    const out = await run(GATE, { origin: { type: "clawhub", registry: stalled.url, slug: "weather", version: "1.0.0" } });
     assert.match(JSON.parse(out.stdout).reason, /ClawHub answered 503/);
     assert.equal(out.status, 0);
     assert.ok(out.ms < 3_000, `took ${out.ms} ms`);
   } finally {
-    server.closeAllConnections();
-    server.close();
+    stalled.close();
+  }
+});
+
+test("a bare slug that several publishers use: warn, and ask for an @owner/slug install", async () => {
+  // ClawHub's answer for GET /api/v1/skills/weather, shortened.
+  const body = { code: "AMBIGUOUS_SKILL_SLUG", slug: "weather", matches: [{ ownerHandle: "steipete", ref: "@steipete/weather" }] };
+  const clawhub = await registry((request, response) => {
+    assert.equal(request.url, "/api/v1/skills/weather");
+    response.writeHead(409, { "content-type": "application/json" }).end(JSON.stringify(body));
+  });
+  try {
+    const staged = { ...documented, origin: { ...documented.origin, registry: clawhub.url }, sourcePath: release({ "SKILL.md": "a" }) };
+    const out = await decide(staged, async () => assert.fail("looked up a review"));
+    assert.equal(out.decision, "warn");
+    assert.match(out.reason, /more than one skill called weather.*Install it as @owner\/weather/);
+  } finally {
+    clawhub.close();
+  }
+});
+
+test("any other conflict from ClawHub: warn with its status", async () => {
+  const clawhub = await registry((_, response) => response.writeHead(409).end("busy"));
+  try {
+    const out = await decide({ ...documented, origin: { ...documented.origin, registry: clawhub.url } }, async () => assert.fail("looked up a review"));
+    assert.match(out.reason, /weather 1\.0\.0 \(ClawHub answered 409\), so it is unchecked/);
+  } finally {
+    clawhub.close();
   }
 });

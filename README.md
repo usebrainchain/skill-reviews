@@ -14,7 +14,8 @@ BrainChain adds reviews as they are accepted, starting with the most-downloaded 
 
 `gate/brainchain-review-gate.mjs` is an OpenClaw [install policy](https://docs.openclaw.ai/tools/skills-config). Before
 a ClawHub skill installs, it looks up the release here and compares the files OpenClaw downloaded with the files that
-were reviewed. When the install names a bare slug rather than `@owner/slug`, it first asks ClawHub who publishes it.
+were reviewed. When the install names a bare slug rather than `@owner/slug`, it first asks ClawHub who publishes it;
+if several publishers use that slug, it asks the operator to install the skill as `@owner/slug`.
 
 | What it finds | What OpenClaw does |
 | --- | --- |
