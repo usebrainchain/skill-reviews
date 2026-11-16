@@ -16,17 +16,36 @@ if (!dir || !owner || !slug || !version || !["testnet", "mainnet"].includes(netw
   process.exit(1);
 }
 const desk = network === "mainnet" ? "https://brain.usebrainchain.com" : "https://brain.testnet.usebrainchain.com";
+const get = (url) => fetch(url, { signal: AbortSignal.timeout(30_000) });
 // An accepted result is released a little after the grade, so read until its text is there (up to 15 minutes).
 let status, code;
 for (let attempt = 0; attempt < 30 && !code; attempt++) {
   if (attempt) await new Promise((r) => setTimeout(r, 30_000));
-  status = await (await fetch(`${desk}/x402/tasks/${order}`)).json();
-  if (!status.task?.accepted || !status.result) continue;
-  const result = await (await fetch(status.result)).text();
-  code = /```python\r?\n([\s\S]*?)```/.exec(result)?.[1];
+  const response = await get(`${desk}/x402/tasks/${order}`);
+  if (!response.ok) throw new Error(`the desk answered ${response.status} for order ${order}`);
+  status = await response.json().catch(() => {
+    throw new Error(`the desk's answer for order ${order} is not JSON`);
+  });
+  if (!status?.task?.accepted || !status.result) continue;
+  const result = await get(status.result);
+  if (result.ok) code = /```python\r?\n([\s\S]*?)```/.exec(await result.text())?.[1];
 }
 if (!status?.task?.accepted || !status.result) throw new Error(`order ${order} has no accepted result`);
-if (!code) throw new Error("the result has no python block after 15 minutes");
+if (!code) throw new Error("the result has no Python block after 15 minutes");
+if (!/^\d+$/.test(status.taskId ?? "")) throw new Error(`the desk gave no task id for order ${order}`);
+// Task ids start again with each contract set, so the verify command names the board the task is on.
+if (!/^0x[0-9a-fA-F]{40}$/.test(status.board ?? "")) throw new Error(`the desk did not say which board order ${order} is on`);
+const board = status.board.toLowerCase();
+
+// Publish only what the chain confirms: run the verify command the review will carry, and require a match.
+const verify = ["brainchain-verify", network, "--task", String(status.taskId), "--set", board];
+let checked;
+try {
+  checked = execFileSync("npx", ["--yes", ...verify], { encoding: "utf8", timeout: 180_000, stdio: ["ignore", "pipe", "inherit"] });
+} catch (error) {
+  throw new Error(`npx ${verify.join(" ")} found a mismatch or could not run:\n${error.stdout ?? error.message}`);
+}
+if (!/^Verdict: match\b/m.test(checked)) throw new Error(`npx ${verify.join(" ")} did not print a match:\n${checked}`);
 
 // The result is Python literals; read them without running anything.
 const parsed = JSON.parse(execFileSync("python3", ["-I", "-c", `
@@ -42,10 +61,11 @@ const review = {
   release: { registry: "clawhub", owner, slug, version },
   files: releaseHash(dir),
   network,
+  board,
   task: Number(status.taskId),
   order,
   record: status.result,
-  verify: `npx brainchain-verify ${network} --task ${status.taskId}`,
+  verify: `npx ${verify.join(" ")}`,
   summary: parsed.summary,
   findings: parsed.findings.map(({ ruleId, severity, file, line, message }) => ({ ruleId, severity, file, line, message })),
   reviewedAt: new Date().toISOString().slice(0, 10),

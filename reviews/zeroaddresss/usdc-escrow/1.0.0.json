@@ -5,12 +5,13 @@
     "slug": "usdc-escrow",
     "version": "1.0.0"
   },
-  "files": "sha256:dad1bfbb5acbc8373f754dc2a2bd18a886d47d37865a20482ff00b8deef395c8",
+  "files": "sha256v2:e5e436255ec0131306922ce66ea8e98961886445a34557514089213c5ee7bafd",
   "network": "mainnet",
+  "board": "0x8385bb4b8990411ccdd8e851b2676da1a4c1f3c4",
   "task": 3,
   "order": "0x92f79c18ca2e86068ef4bf2019066232badf00503e7e25998e2faf5d0e4767a7",
   "record": "https://brain.usebrainchain.com/records/0x862f7c5782d923cccafea1e1a366bcb154cd31e56dd8786a7bcd4bd57be2c09b.txt",
-  "verify": "npx brainchain-verify mainnet --task 3",
+  "verify": "npx brainchain-verify mainnet --task 3 --set 0x8385bb4b8990411ccdd8e851b2676da1a4c1f3c4",
   "summary": "The usdc-escrow skill wraps a third-party hosted REST API (default https://api.payclawback.xyz, overridable via the ESCROW_API_URL environment variable) to create, list, inspect, release, dispute, resolve and reclaim USDC escrows on Base Sepolia; it requires the curl and jq binaries and needs no API keys or wallet credentials from the operator, since the server wallet holds the arbiter key and signs contract calls. Scripts send user-supplied beneficiary addresses, amounts and descriptions over plain HTTP(S) to that host, and the skill-card warns that fund-moving calls are unauthenticated. No private keys, seed phrases, downloaded code, encoded payloads or metadata.clawdbot blocks are present, but ESCROW_API_URL is used throughout without being declared in metadata.openclaw.requires.env.",
   "findings": [
     {

@@ -7,10 +7,11 @@
   },
   "files": "sha256:bb1d89c06a0deea014f2eb9bad2fac6b43b5fffbbfa5c1ad2e8124665ef1faf8",
   "network": "mainnet",
+  "board": "0x44b8464342bbfb9b565fae494dfdefa37d33a211",
   "task": 46,
   "order": "0x7f10a9ee9e0e02aeddab10572d7168561119e99bcf5599c2892fada8d6882933",
   "record": "https://brain.usebrainchain.com/records/0xf891724b09b25d6703afe8f96a8755fd41d2003817b7be18d406d9e0233ec0b2.txt",
-  "verify": "npx brainchain-verify mainnet --task 46",
+  "verify": "npx brainchain-verify mainnet --task 46 --set 0x44b8464342bbfb9b565fae494dfdefa37d33a211",
   "summary": "The nansen-trading skill drives the Nansen CLI (`nansen trade`, `nansen perp`) to quote and execute Solana/Base DEX swaps, cross-chain bridges, Solana limit orders and Hyperliquid perp trades, all of which are irreversible on-chain. It needs the `nansen` binary (installed from the npm package nansen-cli), a NANSEN_WALLET_PASSWORD that it tells the agent to persist in plaintext at ~/.nansen/.env, a NANSEN_API_KEY or browser session, and a Nansen-managed wallet. It talks to the Nansen API (compliance screening, price lookup, quotes), Hyperliquid and RPC endpoints. Only NANSEN_WALLET_PASSWORD is declared in requires.env; NANSEN_API_KEY is declared only as primaryEnv, and NANSEN_YES and NANSEN_REQUIRE_CONFIRM are not declared at all.",
   "findings": [
     {

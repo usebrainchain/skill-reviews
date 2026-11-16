@@ -7,10 +7,11 @@
   },
   "files": "sha256:22f4d9d67ad1bd3b7f68945ee5e753e11487cb055591e6248625a50be94fc75a",
   "network": "mainnet",
+  "board": "0x44b8464342bbfb9b565fae494dfdefa37d33a211",
   "task": 17,
   "order": "0x9c696405f14db64c66c07ac24a433f0a6d68f9a856b360084d72c85fd998a8aa",
   "record": "https://brain.usebrainchain.com/records/0x3156244013b7eadcd75db1a63ea68a8e951b18430bb2337bcab62240625c5d44.txt",
-  "verify": "npx brainchain-verify mainnet --task 17",
+  "verify": "npx brainchain-verify mainnet --task 17 --set 0x44b8464342bbfb9b565fae494dfdefa37d33a211",
   "summary": "This skill wraps the Nansen CLI (`nansen research profiler ...`) to profile and compare blockchain wallets: balance, PnL, labels, transactions, counterparties, related wallets, batch and multi-hop trace. It needs the `nansen` binary, installed from the npm package nansen-cli, and a Nansen API key (NANSEN_API_KEY) or a saved browser login session. Calls can trigger automatic x402 payments from a configured wallet, and each call, including calls in loops, can cost money. Queries go to Nansen's API, which the files do not name directly.",
   "findings": [
     {

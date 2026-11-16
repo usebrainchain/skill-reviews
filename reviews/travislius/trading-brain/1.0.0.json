@@ -7,10 +7,11 @@
   },
   "files": "sha256:d22f3857ff56441f937014ce857d1cfe56e46a84782eaf379bef25209f4648fa",
   "network": "mainnet",
+  "board": "0x8385bb4b8990411ccdd8e851b2676da1a4c1f3c4",
   "task": 19,
   "order": "0x0fe11228326a0581ee8d5443a2774666c1b53d1b0532c009811bbf199339aac2",
   "record": "https://brain.usebrainchain.com/records/0x77e6679b8fd4d15581bf089ca3c50d8d98627177d64ff0ffa977cf3b1934b051.txt",
-  "verify": "npx brainchain-verify mainnet --task 19",
+  "verify": "npx brainchain-verify mainnet --task 19 --set 0x8385bb4b8990411ccdd8e851b2676da1a4c1f3c4",
   "summary": "The skill is a prompt-only document that loads Travis's personal trading strategy, risk rules and next-wave research method into the session. It tells the agent to run a local Serper search script, read Alpaca-linked config and local memory files, and write trade notes. It declares no env vars, keys, wallets or binaries, yet it implies Serper and Alpaca credentials and scans external sources (X, Polymarket, Reddit, SCMP/FT).",
   "findings": [
     {
