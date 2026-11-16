@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
@@ -118,4 +118,40 @@ test("no source directory to compare: warn, never allow", async () => {
     assert.equal(out.decision, "warn");
     assert.match(out.reason, /not compared/);
   }
+});
+
+// OpenClaw's example request from docs.openclaw.ai/tools/skills-config, as published: its origin names no owner.
+const documented = JSON.parse(readFileSync(new URL("./fixtures/skill-install-request.json", import.meta.url), "utf8"));
+
+test("OpenClaw's documented request: the owner comes from the registry it names", async () => {
+  const dir = release({ "SKILL.md": "a" });
+  const asked = [];
+  const out = await decide(
+    { ...documented, sourcePath: dir },
+    async (...lookup) => {
+      asked.push(["review", ...lookup]);
+      return review(dir, [finding("info", "outbound-host")])();
+    },
+    async (...lookup) => {
+      asked.push(["owner", ...lookup]);
+      return "acme";
+    },
+  );
+  assert.equal(out.decision, "allow");
+  assert.deepEqual(asked, [["owner", "https://clawhub.openclaw.ai", "weather"], ["review", "acme", "weather", "1.0.0"]]);
+});
+
+test("an owner-qualified install names the owner, so the registry is not asked", async () => {
+  const dir = release({ "SKILL.md": "a" });
+  const out = await decide(request(dir), review(dir, [finding("info")]), async () => assert.fail("asked the registry"));
+  assert.equal(out.decision, "allow");
+});
+
+test("the registry cannot say who publishes the slug: warn", async () => {
+  const dir = release({ "SKILL.md": "a" });
+  const out = await decide({ ...documented, sourcePath: dir }, review(dir, []), async () => {
+    throw new Error("ClawHub answered 404");
+  });
+  assert.equal(out.decision, "warn");
+  assert.match(out.reason, /weather 1\.0\.0 \(ClawHub answered 404\)/);
 });

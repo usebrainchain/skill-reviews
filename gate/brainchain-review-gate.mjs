@@ -15,6 +15,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const INDEX = process.env.BRAINCHAIN_REVIEWS_URL ?? "https://raw.githubusercontent.com/usebrainchain/skill-reviews/main/reviews";
+const CLAWHUB = "https://clawhub.ai";
 const BLOCKING = new Set(["pipe-to-shell", "encoded-payload"]);
 // ClawHub adds _meta.json to every download; it is not part of what the publisher wrote.
 const SKIP = new Set(["_meta.json"]);
@@ -66,17 +67,21 @@ export function legacyReleaseHash(dir) {
 
 const answer = (decision, reason, findings = []) => ({ protocolVersion: 1, decision, ...(reason ? { reason } : {}), findings });
 
-export async function decide(request, fetchReview = fetchFromIndex) {
+export async function decide(request, fetchReview = fetchFromIndex, fetchOwner = fetchOwnerFromRegistry) {
   const origin = request.origin ?? {};
-  if (origin.type !== "clawhub" || !origin.ownerHandle || !origin.slug || !origin.version) {
+  if (origin.type !== "clawhub" || !origin.slug || !origin.version) {
     return answer("warn", "Not a ClawHub release, so BrainChain has no review of it.");
   }
-  const release = `${origin.ownerHandle}/${origin.slug} ${origin.version}`;
+  let release = `${origin.slug} ${origin.version}`;
   let review;
   try {
-    review = await fetchReview(origin.ownerHandle, origin.slug, origin.version);
+    // OpenClaw names the owner only for an owner-qualified install (@owner/slug). For a bare slug the registry chose
+    // the publisher, so ask it which one. Either way, the file hash below is what ties a review to these files.
+    const owner = origin.ownerHandle ?? (await fetchOwner(origin.registry ?? CLAWHUB, origin.slug));
+    release = `${owner}/${release}`;
+    review = await fetchReview(owner, origin.slug, origin.version);
   } catch (error) {
-    return answer("warn", `Could not reach BrainChain's reviews (${error.message}); ${release} is unchecked.`);
+    return answer("warn", `Could not look up BrainChain's review of ${release} (${error.message}), so it is unchecked.`);
   }
   if (!review) return answer("warn", `No BrainChain review of ${release} yet.`);
   if (!request.sourcePath || request.sourcePathKind !== "directory") {
@@ -110,9 +115,20 @@ export async function decide(request, fetchReview = fetchFromIndex) {
   return answer("allow", undefined, findings);
 }
 
+// Each lookup gets 4 seconds, so both fit in the 10 seconds OpenClaw gives a policy by default.
+async function fetchOwnerFromRegistry(registry, slug) {
+  const response = await fetch(`${registry.replace(/\/+$/, "")}/api/v1/skills/${encodeURIComponent(slug)}`, {
+    signal: AbortSignal.timeout(4_000),
+  });
+  if (!response.ok) throw new Error(`ClawHub answered ${response.status}`);
+  const owner = (await response.json())?.owner?.handle;
+  if (typeof owner !== "string" || !owner) throw new Error("ClawHub named no owner");
+  return owner;
+}
+
 async function fetchFromIndex(owner, slug, version) {
   const response = await fetch(`${INDEX}/${encodeURIComponent(owner)}/${encodeURIComponent(slug)}/${encodeURIComponent(version)}.json`, {
-    signal: AbortSignal.timeout(5_000),
+    signal: AbortSignal.timeout(4_000),
   });
   if (response.status === 404) return undefined;
   if (!response.ok) throw new Error(`index answered ${response.status}`);

@@ -14,14 +14,14 @@ BrainChain adds reviews as they are accepted, starting with the most-downloaded 
 
 `gate/brainchain-review-gate.mjs` is an OpenClaw [install policy](https://docs.openclaw.ai/tools/skills-config). Before
 a ClawHub skill installs, it looks up the release here and compares the files OpenClaw downloaded with the files that
-were reviewed:
+were reviewed. When the install names a bare slug rather than `@owner/slug`, it first asks ClawHub who publishes it.
 
 | What it finds | What OpenClaw does |
 | --- | --- |
 | A review with informational findings only | Installs, and shows the findings |
 | A review with warnings or critical findings | Shows the findings and asks the operator to approve |
 | A finding that code is downloaded or decoded and then run | Blocks the install |
-| No review yet, a review whose file hash leaves out hidden files, files that differ from the reviewed ones, a skill from outside ClawHub, or no answer from this index | Asks the operator to approve, and says why |
+| No review yet, a review whose file hash leaves out hidden files, files that differ from the reviewed ones, a skill from outside ClawHub, or no answer from this index or ClawHub | Asks the operator to approve, and says why |
 
 It needs Node.js 22 or later and nothing else. OpenClaw runs a policy only from a directory that no other user can
 write, so keep it in one of your own:
