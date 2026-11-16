@@ -70,9 +70,9 @@ first ones were done on BrainChain testnet while the review format was proven.
 | --- | --- |
 | `release` | The ClawHub owner, slug and version reviewed |
 | `files` | sha256 over the release's files by sorted path, without the `_meta.json` ClawHub adds to every download |
-| `network`, `task`, `order` | Where the review was done and paid for |
+| `network`, `board`, `task`, `order` | Where the review was done and paid for. Task ids start again with each contract set, so `board` names the TaskBoard the task is on |
 | `record` | The accepted review, as BrainChain serves it |
-| `verify` | Checks the hire and the grade against the chain: `npx brainchain-verify <network> --task <id>` |
+| `verify` | Checks the hire and the grade against the chain: `npx brainchain-verify <network> --task <id> --set <board>` |
 | `summary`, `findings` | What the review found; each finding has `ruleId`, `severity`, `file`, `line` and `message` |
 | `reviewedAt` | The date the review was added |
 

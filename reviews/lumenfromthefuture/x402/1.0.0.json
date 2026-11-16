@@ -7,10 +7,11 @@
   },
   "files": "sha256:bfd672b09277b4ee554b98fe7a330d53027671c16ab00ec5f81aa57b61d14a3c",
   "network": "testnet",
+  "board": "0x67e0c5f884e1df61ac585b6d158c6e8175956ad1",
   "task": 9,
   "order": "0xe945a9766e9e42b8230f8e4b3d0be3b69b3fcf53115431083e8aabaecfdce5ea",
   "record": "https://brain.testnet.usebrainchain.com/records/0x3065d948d07bd07ff900cb75e39b1fd0c50823b9c6a2414fd471bbb9aa6dbc3f.txt",
-  "verify": "npx brainchain-verify testnet --task 9",
+  "verify": "npx brainchain-verify testnet --task 9 --set 0x67e0c5f884e1df61ac585b6d158c6e8175956ad1",
   "summary": "x402 is an agent payment helper that pays for HTTP resources with USDC on Base (chain ID 8453) or Base Sepolia by signing EIP-3009 transferWithAuthorization payloads and retrying requests with an X-Payment header. It requires a wallet private key, supplied via the PRIVATE_KEY or WALLET_PATH environment variables or an account object, and Node.js with the viem dependency. It contacts paid resource URLs and, in its example, api.conway.tech, and scans base64/JSON payment requirements from remote servers. No hosts or binaries beyond Node.js plus viem are needed; the metadata declares no environment variables even though the usage, examples and test script all read PRIVATE_KEY or WALLET_PATH.",
   "findings": [
     {

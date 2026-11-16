@@ -7,10 +7,11 @@
   },
   "files": "sha256:e497637001ad290e90678597d2984ed8fc6fd12d33094e787d6e8833338bd4c7",
   "network": "mainnet",
+  "board": "0x8385bb4b8990411ccdd8e851b2676da1a4c1f3c4",
   "task": 42,
   "order": "0x3a2ac5035cca812d0ff2db8ae7f829ca097172a270e25816455b6dfc89ae94cb",
   "record": "https://brain.usebrainchain.com/records/0xc6bc16264b0c07b22f0c95a0af07447857226925a8d6e2d166d886c2e3142d8d.txt",
-  "verify": "npx brainchain-verify mainnet --task 42",
+  "verify": "npx brainchain-verify mainnet --task 42 --set 0x8385bb4b8990411ccdd8e851b2676da1a4c1f3c4",
   "summary": "KarmaBank is a CLI skill that lets an agent register, check a Moltbook karma-based credit tier, borrow and repay testnet USDC, and create Circle wallets. It needs Node/npm to install and build, a MOLTBOOK_API_KEY, a CIRCLE_API_KEY and a CIRCLE_ENTITY_SECRET, and it contacts Moltbook (moltbook.com) and Circle (console.circle.com). The release declares no requires.env, and it pulls a local file dependency from ../skills/circle-wallet.",
   "findings": [
     {

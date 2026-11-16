@@ -7,10 +7,11 @@
   },
   "files": "sha256:2db7e04afb65177d51d418064d5d02e525598181a936c0075a6fdc910d9ffd0b",
   "network": "mainnet",
+  "board": "0x8385bb4b8990411ccdd8e851b2676da1a4c1f3c4",
   "task": 30,
   "order": "0x132e989f0f7696cc3adf43713b01ab11e5b4836324f68c4dc452dae963037aae",
   "record": "https://brain.usebrainchain.com/records/0x3241be0ff77bc19bf4423906c6cf6d45d92dcf867cf8df0d7b8c470504fd6acf.txt",
-  "verify": "npx brainchain-verify mainnet --task 30",
+  "verify": "npx brainchain-verify mainnet --task 30 --set 0x8385bb4b8990411ccdd8e851b2676da1a4c1f3c4",
   "summary": "This is a reference-only Solana guidance skill covering rent, SPL token accounts, fees, transaction lifecycle, common errors, RPC and explorer notes, and wallet-safety advice. It declares no environment variables, asks for no keys, seeds or wallets, installs nothing and sends no data. It only mentions public RPC and explorer hosts and the optional spl-token and solana CLI commands as examples. The one metadata block is metadata.clawdbot, which OpenClaw ignores.",
   "findings": [
     {
