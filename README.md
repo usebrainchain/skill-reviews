@@ -86,7 +86,7 @@ top of every download. Hidden files and files in hidden directories count. Files
 paths, which are relative to the release with `/` between directories, and each adds four parts: its path's length,
 the path, its size and its bytes, with both lengths as 8-byte big-endian integers. A release that contains a symbolic
 link has no hash. Older reviews carry the first format, `sha256:`, which left hidden files out, so for those the
-policy asks the operator to approve even when the files match.
+policy asks the operator to approve even when the files match, and names any hidden files the release contains.
 
 ## License
 

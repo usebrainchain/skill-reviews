@@ -6,7 +6,7 @@
 //   reviewed, files match, warn or critical     -> warn, with the findings (the operator acknowledges)
 //   a finding that downloads or decodes and runs code -> block
 //   no review, files differ or not passed, lookup failed, not from ClawHub -> warn, saying which
-//   a review whose hash leaves out hidden files (sha256:) -> warn at most, even when the files match
+//   a review whose hash leaves out hidden files (sha256:) -> warn at most, naming the hidden files the release has
 //
 // It never blocks for lack of a review or a network error, and it needs nothing but Node 22.
 import { createHash } from "node:crypto";
@@ -26,6 +26,8 @@ const MAX_FINDINGS = 100;
 const NOTICE_CHARS = 4_000;
 const NOTICE_FRAME = 700;
 const SEVERITY = { critical: 0, warn: 1, info: 2 };
+// How many hidden files an older review's warning names before it says how many more there are.
+const HIDDEN_NAMED = 5;
 
 /**
  * sha256v2 over every file of a release, hidden ones included, but ClawHub's top-level _meta.json. Files go in the
@@ -72,6 +74,25 @@ export function legacyReleaseHash(dir) {
   return `sha256:${hash.digest("hex")}`;
 }
 
+// The hidden files and directories of a release, outermost only: ".hooks/" stands for everything under it.
+function hiddenIn(dir) {
+  const hidden = new Set();
+  for (const path of filesIn(dir)) {
+    const parts = path.split("/");
+    const at = parts.findIndex((part) => part.startsWith("."));
+    if (at >= 0) hidden.add(parts.slice(0, at + 1).join("/") + (at < parts.length - 1 ? "/" : ""));
+  }
+  return [...hidden].sort();
+}
+
+// What an older review's warning says about the hidden files its hash did not cover.
+function uncovered(hidden) {
+  if (!hidden.length) return "This review's file hash leaves out hidden files; this release has none.";
+  const named = hidden.slice(0, HIDDEN_NAMED).map((path) => (path.length > 80 ? `…${path.slice(-79)}` : path));
+  const more = hidden.length > named.length ? ` and ${hidden.length - named.length} more` : "";
+  return `This review's file hash leaves out hidden files, so these were not compared: ${named.join(", ")}${more}.`;
+}
+
 const answer = (decision, reason, findings = []) => ({ protocolVersion: 1, decision, ...(reason ? { reason } : {}), findings });
 
 // Characters OpenClaw prints for text: newlines and tabs become two, other control characters none.
@@ -116,8 +137,10 @@ export async function decide(request, fetchReview = fetchFromIndex, fetchOwner =
   }
   const v2 = review.files?.startsWith("sha256v2:");
   let files;
+  let hidden;
   try {
     files = (v2 ? releaseHash : legacyReleaseHash)(request.sourcePath);
+    if (!v2) hidden = hiddenIn(request.sourcePath);
   } catch (error) {
     return answer("warn", `Could not hash the files of ${release} (${error.message}).`);
   }
@@ -137,8 +160,8 @@ export async function decide(request, fetchReview = fetchFromIndex, fetchOwner =
   if (!v2 || review.findings.some((f) => f.severity !== "info")) {
     const critical = review.findings.filter((f) => f.severity === "critical").length;
     const counts = `${review.findings.length} findings${critical ? `, ${critical} critical` : ""}`;
-    const hidden = v2 ? "" : " This review's file hash leaves out hidden files, so those were not compared.";
-    return reply("warn", `BrainChain reviewed ${release}: ${counts}.${hidden} ${link}`);
+    const note = v2 ? "" : ` ${uncovered(hidden)}`;
+    return reply("warn", `BrainChain reviewed ${release}: ${counts}.${note} ${link}`);
   }
   return reply("allow");
 }
