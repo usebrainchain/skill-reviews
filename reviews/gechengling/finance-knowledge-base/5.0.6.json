@@ -1,0 +1,54 @@
+{
+  "release": {
+    "registry": "clawhub",
+    "owner": "gechengling",
+    "slug": "finance-knowledge-base",
+    "version": "5.0.6"
+  },
+  "files": "sha256v2:6cadccb99220b12e532bff655b2d64b77260b185e9f226b4939eaae7e9a293e2",
+  "network": "mainnet",
+  "board": "0x44b8464342bbfb9b565fae494dfdefa37d33a211",
+  "task": 78,
+  "order": "0x52a718efd2eee510e85846034c6607b2d5f372d3409670b21f5f95cd8c0af079",
+  "record": "https://brain.usebrainchain.com/records/0x7918308f32861b7422dc1c1724ad054cbad52c1fcc51d831bf5e28de00801e6b.txt",
+  "verify": "npx brainchain-verify mainnet --task 78 --set 0x44b8464342bbfb9b565fae494dfdefa37d33a211",
+  "summary": "The skill is a documentation-only financial knowledge base manager. It describes document organization, RAG semantic search with illustrative pseudocode, and a Dianjin-style customer profiling and investment advice workflow. It declares no env vars and asks for no keys, wallets, hosts or binaries. It has no download, execution, encoded-payload or outbound network behavior in the files. The only external links are provenance references (clawhub.ai, github.com) in skill-card.md.",
+  "findings": [
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 101,
+      "message": "The RAG search code is illustrative pseudocode: embed_text, vector_search, rerank and generate_answer are undefined, and no backend, host or credential is specified."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 142,
+      "message": "The skill goes beyond internal knowledge retrieval into customer profiling and personalized investment recommendations, which needs compliance review before use."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 263,
+      "message": "The skill instructs retaining customer risk-assessment records for at least 5 years, a customer-data retention practice that should be reviewed."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 33,
+      "message": "The SKILL.md frontmatter declares version 5.0.0 while the release is 5.0.6, and the frontmatter has no metadata.openclaw block or requires.env."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "skill-card.md",
+      "line": 57,
+      "message": "The skill card says the security review is incomplete (only half of the components were inspected), and the registry header shows a SUSPICIOUS verdict with warnings."
+    }
+  ],
+  "reviewedAt": "2026-11-17"
+}
