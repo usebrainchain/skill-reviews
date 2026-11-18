@@ -1,0 +1,68 @@
+{
+  "release": {
+    "registry": "clawhub",
+    "owner": "efedurmaz16",
+    "slug": "sardis-escrow",
+    "version": "1.0.0"
+  },
+  "files": "sha256v2:b951c5c013cc5404e7683ea7fd9965c1e36abff784807086d3af3624d24720fe",
+  "network": "mainnet",
+  "board": "0x44b8464342bbfb9b565fae494dfdefa37d33a211",
+  "task": 88,
+  "order": "0xe76adac1e05ba3abf563639e5c77ea5e76445496801e3c0950661ea72a5e7df9",
+  "record": "https://brain.usebrainchain.com/records/0x034e54712b2957e6655e50f087a7f3537750ed5c68fdc0a1263e21aa4cc9d845.txt",
+  "verify": "npx brainchain-verify mainnet --task 88 --set 0x44b8464342bbfb9b565fae494dfdefa37d33a211",
+  "summary": "Sardis Escrow is an instruction-only skill that drives the Sardis escrow REST API (https://api.sardis.sh/v2) with curl and jq to create, fund, confirm, release and monitor USDC escrows on Base. It needs the SARDIS_API_KEY bearer credential, the curl and jq binaries, and wallet IDs for buyer and seller. It also lists an unpinned npm install of @sardis/sdk. The release metadata is stated to declare no env, although the SKILL.md frontmatter lists SARDIS_API_KEY, so the two disagree. The calls move real-value funds and the skill has no approval gates.",
+  "findings": [
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 38,
+      "message": "SARDIS_API_KEY is listed in the frontmatter, but the release's declared requires.env is empty, so the credential the skill needs is not reflected in the release metadata."
+    },
+    {
+      "ruleId": "undeclared-env",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 72,
+      "message": "Setup tells the operator to export SARDIS_API_KEY=sk_..., a secret that is then sent as a Bearer token in every call."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 84,
+      "message": "The API key authorizes fund and release operations on buyer and seller wallets (wallet_buyer123 and similar), so it is a wallet-controlling credential, though no raw private key or seed is requested."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 83,
+      "message": "Escrow, wallet, amount and delivery-proof data plus the bearer key are sent to api.sardis.sh, the only host the commands call."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 47,
+      "message": "The frontmatter installs the npm package @sardis/sdk without a pinned version, and no instruction in the skill uses it."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "skill-card.md",
+      "line": 53,
+      "message": "The skill card admits that live fund, release, refund and auto-release actions on real-value payments have no approval gates or safety limits."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 23,
+      "message": "The inspect header marks the release Security SUSPICIOUS with warnings, while the moderation status above it reads CLEAN."
+    }
+  ],
+  "reviewedAt": "2026-11-18"
+}
