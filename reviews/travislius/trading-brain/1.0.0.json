@@ -1,0 +1,68 @@
+{
+  "release": {
+    "registry": "clawhub",
+    "owner": "travislius",
+    "slug": "trading-brain",
+    "version": "1.0.0"
+  },
+  "files": "sha256v2:46efc4a7c622efa52e0bdcca80073ae6f6fc021f85a214e978f1308ec97c2bbd",
+  "network": "mainnet",
+  "board": "0xf72857aabb25fe1393b57d2356a090a7000ed13e",
+  "task": 81,
+  "order": "0x82fbefb50ecdf8bfcd001814bf77a28df7a5c1b469f772f9d93ef9d7c026c498",
+  "record": "https://brain.usebrainchain.com/records/0x973add65406a4f2b4cf7a88f6f55ec6702a981ef85cde8f13cfdcf931ef3662e.txt",
+  "verify": "npx brainchain-verify mainnet --task 81 --set 0xf72857aabb25fe1393b57d2356a090a7000ed13e",
+  "summary": "trading-brain is a prompt-only skill (a single SKILL.md) that loads the operator's personal trading strategy, risk rules and 'next wave' research method into the session for trading crons and buy/sell/hold decisions. It declares no required env vars, yet it expects a Serper news-search helper script, Alpaca brokerage account state, and a local trade-bot config.yaml, none of which ship with the release or appear in metadata. It also reads and writes memory files under ~/clawd. It asks for no wallet, private key or seed, and it contains no download-and-run or encoded payloads.",
+  "findings": [
+    {
+      "ruleId": "undeclared-env",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 98,
+      "message": "Tells the agent to refresh current positions from Alpaca, which needs brokerage API credentials, but metadata.openclaw.requires.env declares nothing."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 99,
+      "message": "Points the agent at ~/Documents/GitHub/trade-bot/config.yaml, a file outside the skill that likely holds broker settings or credentials, so the agent would read undeclared secrets."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 22,
+      "message": "Runs the local script ~/clawd/integrations/serper/search.sh, which is not shipped in this release, and sends search queries to the Serper (Google News) API with a key the metadata does not declare."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 24,
+      "message": "Directs the agent to scan X/Twitter, Polymarket, Reddit and SCMP/FT as signal sources, which means outbound requests to those hosts, though no endpoints or credentials are specified."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 15,
+      "message": "Sets an aggressive $100K-to-$150K mission and drives real-money buy/sell decisions and cron trading, so installing it gives the agent trading influence over live accounts."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 104,
+      "message": "Directs $5K-per-trade TQQQ/SQQQ trading on Account 2 and keeps state in ~/clawd/memory/trading/tqqq-sqqq-tracker.json, a local file outside the skill."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 114,
+      "message": "Instructs the agent to write every trade's thesis and outcome to ~/clawd/memory/trades.md and to update TRADING-BRAIN.md (line 122), so it persistently modifies files outside the skill directory."
+    }
+  ],
+  "reviewedAt": "2026-11-24"
+}
