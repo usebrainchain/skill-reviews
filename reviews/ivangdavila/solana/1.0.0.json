@@ -1,0 +1,54 @@
+{
+  "release": {
+    "registry": "clawhub",
+    "owner": "ivangdavila",
+    "slug": "solana",
+    "version": "1.0.0"
+  },
+  "files": "sha256v2:e8f8e331d0a160040b34839cb3923b8168038358a2ebf3e2a2c2da5360f05c12",
+  "network": "mainnet",
+  "board": "0xf72857aabb25fe1393b57d2356a090a7000ed13e",
+  "task": 86,
+  "order": "0x045537c4aa37a580f815ffaae68dd035c7813e70545f9bac09f91426db30f2aa",
+  "record": "https://brain.usebrainchain.com/records/0xc996b4fe48d86b8e812aa13f1ee165981336df3d6365a3bf1903e33090011900.txt",
+  "verify": "npx brainchain-verify mainnet --task 86 --set 0xf72857aabb25fe1393b57d2356a090a7000ed13e",
+  "summary": "This is a reference-only Solana guide covering rent, SPL token accounts, fees, the transaction lifecycle, common errors, RPC endpoints and wallet-safety tips. It asks for no environment variables, API keys, private keys or seed phrases, and it contains no download or execution steps. It mentions two CLI tools (spl-token and solana) as example commands and names public RPC and explorer hosts only as information, without sending data to any of them. Its only metadata block is metadata.clawdbot, which OpenClaw does not read.",
+  "findings": [
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 4,
+      "message": "Metadata uses a metadata.clawdbot block (emoji and os list for linux, darwin and win32) instead of metadata.openclaw, so OpenClaw ignores it and what it declares counts as undeclared."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 45,
+      "message": "The wallet section warns that malicious Approve prompts can drain a wallet and advises burner wallets (line 46), but it never asks for or handles a private key, seed or wallet credential."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "info",
+      "file": "skill-card.md",
+      "line": 30,
+      "message": "The skill card mitigation tells users never to expose seed phrases or private keys, which shows the skill handles wallet-credential guidance only as a warning and requests no credentials."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 11,
+      "message": "The skill suggests running the `spl-token close` CLI command, which can move SOL back to the owner, but no required binaries are declared in the metadata."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 35,
+      "message": "The skill suggests the `solana confirm -v <txid>` CLI command for reading logs, and the solana binary is likewise not declared as required."
+    }
+  ],
+  "reviewedAt": "2026-11-25"
+}
