@@ -1,0 +1,47 @@
+{
+  "release": {
+    "registry": "clawhub",
+    "owner": "agisearch",
+    "slug": "defi",
+    "version": "2.0.0"
+  },
+  "files": "sha256v2:4e03be402a7af05e366b4aba2b27ed26a08a759af1f4eff517b25ac1ced43778",
+  "network": "mainnet",
+  "board": "0xf72857aabb25fe1393b57d2356a090a7000ed13e",
+  "task": 90,
+  "order": "0x872a113b9891f09088f31b4e6ea1130cd6518560f351771ece6b4eef1ae99e25",
+  "record": "https://brain.usebrainchain.com/records/0x0b1b8dc7ec0f5e03896b9e9a0d493d2286c80cd1f58558b521bd5af2c934116b.txt",
+  "verify": "npx brainchain-verify mainnet --task 90 --set 0xf72857aabb25fe1393b57d2356a090a7000ed13e",
+  "summary": "The release is an instruction-only DeFi advisory skill. It assesses protocol risk, estimates real yield, screens for rug-risk patterns and sorts user-supplied transaction logs into tax-event categories. It needs no API keys, wallets, binaries or outbound hosts, and requires.env is empty, which matches the files. It explicitly refuses seed phrases and private keys and does no signing or broadcasting. The only URLs are the publisher link in skill-card.md and the homepage in skill.json, and neither is contacted.",
+  "findings": [
+    {
+      "ruleId": "wallet-key",
+      "severity": "info",
+      "file": "skill.md",
+      "line": 43,
+      "message": "The skill states it will never ask for a seed phrase, private key or wallet secrets (lines 43-46), so it does not handle wallet credentials."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "info",
+      "file": "skill-card.md",
+      "line": 29,
+      "message": "The skill card warns users not to paste seed phrases, private keys or signing material and to use separate local wallet tooling for any transaction."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "skill.md",
+      "line": 39,
+      "message": "External chain or protocol context from the host platform is allowed as read-only analysis context, but the skill bundles no RPC client or wallet connector and declares no hosts."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "skill.json",
+      "line": 5,
+      "message": "The skill.json author is 'qclawbot' while the skill card names publisher agisearch, a minor provenance mismatch; the homepage is a GitHub link that is not contacted."
+    }
+  ],
+  "reviewedAt": "2026-11-25"
+}
