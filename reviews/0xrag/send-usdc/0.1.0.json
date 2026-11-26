@@ -1,0 +1,89 @@
+{
+  "release": {
+    "registry": "clawhub",
+    "owner": "0xrag",
+    "slug": "send-usdc",
+    "version": "0.1.0"
+  },
+  "files": "sha256v2:f33c240ccb7c4bb7900e1441bd467db6a72f87e970bb245bd09e63d9dd059270",
+  "network": "mainnet",
+  "board": "0xf72857aabb25fe1393b57d2356a090a7000ed13e",
+  "task": 95,
+  "order": "0xd6e70f630db141264ae63adc99ec9746d3c269749117d7cc712017f06ad1c01a",
+  "record": "https://brain.usebrainchain.com/records/0x9349cc1d7036dbf0cecf16e2be35ca4bcfc4d76bfcb6a28caf5bfbbeca6c1ad5.txt",
+  "verify": "npx brainchain-verify mainnet --task 95 --set 0xf72857aabb25fe1393b57d2356a090a7000ed13e",
+  "summary": "send-usdc is an instruction-only skill that tells the agent to run the unpinned npm package `npx awal@latest` (status, balance, send) to transfer USDC on Base to a 0x address or ENS name from the operator's authenticated wallet. It asks for no environment variables or private keys, but it needs node/npx, network access to the npm registry and the awal wallet backend, and Ethereum mainnet access for ENS resolution. Wallet login is by email through a separate `authenticate-wallet` skill that is not included. requires.env is empty and no metadata.openclaw block is declared. The frontmatter pre-approves send commands and allows model invocation, with no confirmation step.",
+  "findings": [
+    {
+      "ruleId": "pipe-to-shell",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 11,
+      "message": "The skill runs `npx awal@latest send`, which downloads the newest version of the npm package `awal` at each run and executes it with authority over a funds-moving wallet, with no version pin or integrity check."
+    },
+    {
+      "ruleId": "pipe-to-shell",
+      "severity": "info",
+      "file": "skill-card.md",
+      "line": 24,
+      "message": "The skill card itself acknowledges that the mutable external wallet package `awal` may move funds and recommends pinning, but SKILL.md never pins it."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 11,
+      "message": "The skill moves USDC out of the operator's authenticated awal wallet; it never asks for a raw private key or seed, but it relies on a wallet credential or session held by the awal tool."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 74,
+      "message": "Authentication is by `awal auth login <email>`, and the actual login flow is delegated to an `authenticate-wallet` skill that is not part of this release, so credential handling cannot be reviewed here."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 6,
+      "message": "allowed-tools pre-approves `npx awal@latest send *` with a wildcard, and line 5 leaves model invocation enabled, so the agent can send funds to any recipient and amount without a separate approval."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 31,
+      "message": "The amount rule treats numbers with no decimal point or above 100 as atomic units, which contradicts the example `send 1` meaning $1.00 on line 45 and risks sending a wrong amount."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "skill-card.md",
+      "line": 32,
+      "message": "The skill card admits the artifact has no built-in transfer confirmation guidance, and SKILL.md has no step to confirm amount, recipient, resolved ENS address or chain before sending."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 67,
+      "message": "The command forms are inconsistent: `npx awal@latest awal status` and `npx awal balance` (no @latest) differ from the allowed-tools patterns on line 6, and bare `awal ...` on lines 74-75 assumes a global install."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 1,
+      "message": "The frontmatter has no metadata.openclaw block, so the dependency on node/npx and the awal package and the network access it needs are not declared."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 59,
+      "message": "ENS names are resolved through Ethereum mainnet, so the recipient name is sent to an RPC endpoint the skill does not name; the transfer goes to the awal backend and Base network, and the package comes from the npm registry."
+    }
+  ],
+  "reviewedAt": "2026-11-26"
+}
