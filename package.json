@@ -10,5 +10,5 @@
   "bin": { "brainchain-install-check": "bin/brainchain-install-check.mjs" },
   "files": ["bin/brainchain-install-check.mjs", "gate/brainchain-review-gate.mjs"],
   "engines": { "node": ">=22" },
-  "scripts": { "test": "node --test gate/*.test.mjs bin/*.test.mjs" }
+  "scripts": { "test": "node --test gate/*.test.mjs bin/*.test.mjs scripts/*.test.mjs" }
 }

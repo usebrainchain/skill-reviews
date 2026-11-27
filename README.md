@@ -2,7 +2,7 @@
 
 Before OpenClaw installs a ClawHub skill, find out what it asks you for and what its files read, run and send. This
 repository holds BrainChain's reviews of skill releases, and an OpenClaw install policy that checks each install
-against them. It also holds reviews of MCP server releases from npm and PyPI.
+against them. It also holds reviews of MCP server releases from npm and PyPI, and of agent configurations.
 
 Each review is a task on [BrainChain](https://usebrainchain.com). A worker reads every file in the release and cites
 the file and line for each finding. Checks run on the review before it is graded. The brain in the chain and a second
@@ -10,6 +10,8 @@ model then grade it, and the lower pass probability counts. Only accepted review
 links to its public record and to the command that checks it against the chain.
 
 BrainChain adds reviews as they are accepted, starting with the most-downloaded wallet and payment skills on ClawHub.
+A publisher can also [order a review of its own release](#order-a-review-of-your-own-release); once accepted, it is
+added here and the install check reads it like any other.
 
 ## Check reviews when OpenClaw installs a skill
 
@@ -150,6 +152,7 @@ first ones ran on BrainChain testnet.
 | `record` | The accepted review, as BrainChain serves it |
 | `verify` | Checks the hire and the grade against the chain: `npx brainchain-verify <network> --task <id> --set <board>` |
 | `summary`, `findings` | What the review found; each finding has `ruleId`, `severity`, `file`, `line` and `message` |
+| `orderedBy` | Present when the skill's publisher ordered the review; see [below](#order-a-review-of-your-own-release) |
 | `reviewedAt` | The date the review was added |
 
 Rule ids: `undeclared-env`, `wallet-key`, `pipe-to-shell`, `encoded-payload`, `outbound-host`, `other`.
@@ -182,6 +185,7 @@ reviews, because OpenClaw does not run install policies for MCP servers.
 | `tools` | One entry per tool: `name`, the `file` and `line` that define it, `reach` (any of `files`, `network`, `shell` and `secrets`), `untrustedOutput` (true when the tool returns text a third party wrote, such as web pages or database rows) and `note` |
 | `permissions` | What the server runs with, the limits the operator can set, and the narrowest setup that works |
 | `findings` | Each finding has `ruleId`, `severity` (`info`, `warn` or `critical`), `file`, `line` and `message` |
+| `orderedBy` | Present when the server's publisher ordered the review; see [below](#order-a-review-of-your-own-release) |
 
 Rule ids:
 
@@ -197,6 +201,92 @@ Rule ids:
 | `pipe-to-shell` | Downloads code and runs it |
 | `encoded-payload` | Decodes data and runs it |
 | `other` | Anything else the files show |
+
+## Agent configuration reviews
+
+Before you run an agent with a configuration you did not write, or after you change your own, find out what it lets
+the agent do. These reviews cover agent configurations: an OpenClaw `openclaw.json` and its workspace, a Claude Code
+project's `.mcp.json` and `.claude/settings.json`, a Cursor `.cursor/mcp.json`, a Hermes Agent `config.yaml`, a Codex
+`config.toml`. The worker reads every file and reports what each server, tool, skill, plugin, hook and channel can
+reach, what runs without asking the operator, and where text a third party wrote reaches the agent. Each finding cites
+a file and line, and the checks confirm every citation before the grade.
+
+Briefs are public, so secrets are replaced with `<redacted>` before the files go into the brief. A `<redacted>` value
+still shows that a secret is stored in that file, and the review reports it. Order one with the
+[Agent configuration review](https://docs.usebrainchain.com/task-templates#agent-configuration-review) template.
+
+`configs/<kind>/<name>/<version or date>.json`, where `kind` is `openclaw`, `claude-code`, `cursor`, `hermes`, `codex`
+or `other`:
+
+| Field | Meaning |
+| --- | --- |
+| `config` | `kind`, `name`, `version` (a release version or the date the files were taken), and `source`, where the configuration was published, when it was |
+| `files` | The `sha256v2:` hash described above, over the files as the review read them, secrets replaced |
+| `network`, `board`, `task`, `order`, `record`, `verify`, `reviewedAt` | As in skill reviews |
+| `summary` | What the configuration sets up and every host, path, command and credential it reaches |
+| `entries` | One per server, tool, skill, plugin, hook, channel or model provider: `name`, `kind`, the `file` and `line` that configure it, `reach` (any of `files`, `network`, `shell` and `secrets`), `untrustedInput` (true when it brings text a third party wrote to the agent), `approval` (`asks`, `auto`, `off`, or `default` when the files do not say) and `note` |
+| `permissions` | What the agent may do without asking, the limits the configuration sets and leaves out, and the narrowest setup that does the job |
+| `findings` | Each finding has `ruleId`, `severity`, `file`, `line` and `message` |
+
+Rule ids:
+
+| Rule id | The configuration |
+| --- | --- |
+| `shell-exec` | Lets the agent or a server run commands |
+| `file-access` | Lets it read or write local files |
+| `network-access` | Connects to a host or service, or listens |
+| `secret-inline` | Stores a key, token or password in its files |
+| `secret-access` | Hands a key or token to a server, tool or skill |
+| `auto-approve` | Runs tools, commands or servers without asking the operator |
+| `unpinned-server` | Fetches a server from a registry or URL without a fixed version, so its code can change |
+| `injection-input` | Lets text a third party wrote reach the agent: messages, mail, web pages, issues |
+| `injection-instructions` | Holds instructions that tell the agent to follow content, skip approvals or hide what it does |
+| `permission-scope` | Gives an entry more than its job needs, or leaves it without a limit the operator can set |
+| `pipe-to-shell` | Downloads code and runs it |
+| `other` | Anything else the files show |
+
+## Order a review of your own release
+
+A publisher can have BrainChain review its own ClawHub skill or MCP server release and pay the bounty. The review is
+graded like any other, and once it is accepted it is added here, so the install check reads it for everyone who
+installs that release.
+
+1. Download the release exactly as the registry serves it, into a new directory. For a ClawHub skill, the download
+   zip; for npm, the tarball's `package/` directory; for PyPI, the file your users install, unpacked.
+2. Build the review task from those files with this repository:
+
+   ```sh
+   git clone https://github.com/usebrainchain/skill-reviews
+   node skill-reviews/scripts/publisher-task.mjs <dir> clawhub:<owner>/<slug> <version>
+   node skill-reviews/scripts/publisher-task.mjs <dir> npm:<package> <version> "$(npm view <package>@<version> dist.integrity)"
+   node skill-reviews/scripts/publisher-task.mjs <dir> pypi:<package> <version> <sha256 of the file>
+   ```
+
+   It prints the task as JSON: the arguments the BrainChain MCP's `brainchain_post_task` takes. Pass them unchanged:
+   the review is added only when the posted task is exactly the template for that release.
+3. Post it. Add `--post` to the same command to post it through the BrainChain MCP with the paying wallet's key in
+   the file `BRAINCHAIN_PAYER_KEY_FILE` names, and `BRAINCHAIN_NETWORK=mainnet` (add `BRAINCHAIN_PAY_ON=robinhood` to
+   pay in USDG on Robinhood Chain rather than USDC on Base). It prints the order, which you can follow with
+   `brainchain_get_task`.
+
+If no worker's review is accepted, the bounty is refunded and nothing is added. A release that already has a review
+here keeps it.
+
+Before a review is added, BrainChain downloads the release again and checks that it matches the artifact the task
+names, that the task is the template for those files, that the grade checks out against the chain, and that every
+cited line is in the release. The review's `orderedBy` records the order:
+
+| Field | Meaning |
+| --- | --- |
+| `party` | `publisher` |
+| `payer`, `payment`, `receipt` | The wallet that paid and its payment, from BrainChain's signed receipt, checked with `npx brainchain-verify <network> --receipt <receipt>` |
+| `checked`, `how` | Whether the payer is shown to be the publisher, and how |
+| `tasks` | Every task on the board that ordered a review of this release this way, the accepted one among them |
+
+ClawHub, npm and PyPI link no wallet to a publisher. To have the link checked, name the paying address in the release
+itself before you publish it, on a line such as `brainchain-review-payer: 0x…` in any file: a README line, a comment,
+or a `package.json` field. Only the publisher can put it there, so `checked` is `true` and `how` names the line.
+Without it, `checked` is `false` and `how` says that the publisher paid rests on the order alone.
 
 ## License
 
