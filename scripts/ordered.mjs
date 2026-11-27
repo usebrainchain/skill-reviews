@@ -9,7 +9,7 @@
 // the publisher is checked only when the release names the paying address; the review says which.
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -205,4 +205,4 @@ async function main() {
   console.log(`added ${added.length}${added.length ? `: ${added.join(", ")}` : ""}`);
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) await main();
+if (process.argv[1] && fileURLToPath(import.meta.url) === realpathSync(process.argv[1])) await main();

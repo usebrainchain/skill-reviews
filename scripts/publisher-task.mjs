@@ -8,6 +8,8 @@
 // takes, to be passed unchanged. --post needs the paying wallet in BRAINCHAIN_PAYER_KEY_FILE or BRAINCHAIN_PAYER_KEY,
 // and BRAINCHAIN_NETWORK (mainnet or testnet); the MCP's other settings, such as BRAINCHAIN_PAY_ON, apply as usual.
 import { spawn } from "node:child_process";
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 import { MAX_BRIEF, mcpTask, readRelease, skillTask } from "./briefs.mjs";
 
@@ -68,7 +70,7 @@ export async function callMcp(tool, args, env = process.env) {
   }
 }
 
-if (import.meta.url === new URL(`file://${process.argv[1]}`).href) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === realpathSync(process.argv[1])) {
   const args = process.argv.slice(2).filter((a) => a !== "--post");
   const [dir, release, version, artifact] = args;
   let built;
