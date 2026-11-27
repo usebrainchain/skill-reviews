@@ -1,0 +1,74 @@
+{
+  "release": {
+    "registry": "npm",
+    "name": "@modelcontextprotocol/server-postgres",
+    "version": "0.6.2",
+    "artifact": "sha512-ukbVmVxLAsdZ5pTVWbhf9fc7lqkSf7XqizNH8XAotI21GnRPtkqO+WLWpeBFU+/2Fyv63uXS7/9NnR8Y8wOP1Q=="
+  },
+  "files": "sha256v2:28b9593beab8bef40fd03a84d5a91d1c643cb1e345d128156eafcafc22e33be6",
+  "network": "mainnet",
+  "board": "0xf72857aabb25fe1393b57d2356a090a7000ed13e",
+  "task": 76,
+  "order": "0xf5ea3a88a50db822e6c3805280dff144d23497a92d55a286ae97180d865cb147",
+  "record": "https://brain.usebrainchain.com/records/0x533fe213c0a430d850159644e4c02ddac91bc3f8452770db3de9f58948a2c2bc.txt",
+  "verify": "npx brainchain-verify mainnet --task 76 --set 0xf72857aabb25fe1393b57d2356a090a7000ed13e",
+  "summary": "This is a stdio MCP server that connects to the PostgreSQL database named by the connection URL in its first command-line argument. It offers one tool, `query`, which runs caller-supplied SQL after a BEGIN TRANSACTION READ ONLY statement and returns the rows as JSON. It also lists and reads per-table schema resources built from information_schema. The only network reach is the database host in that URL, and the only credential is the one embedded in that URL. The code touches no local files, spawns no commands and reads no environment variables, though the pg library may itself read PG* environment variables.",
+  "tools": [
+    {
+      "name": "query",
+      "file": "dist/index.js",
+      "line": 73,
+      "reach": [
+        "network"
+      ],
+      "untrustedOutput": true,
+      "note": "Sends any SQL string the model supplies to the configured PostgreSQL server and returns the resulting rows, so it can do whatever the database role allows, including writes if the string escapes the read-only transaction."
+    }
+  ],
+  "permissions": "The server takes no environment variables or config files in its own code. It needs one argument, the database URL (args[0]), which carries the host, database, user and password and is visible in the process list and in the client config. It runs with the OS user's normal rights but opens no files or subprocesses. All real authority comes from the database role in that URL. The operator can only limit it through that role, since the server has no allow-list, row limit, timeout or query filter. The READ ONLY transaction is the only guard, and it is not a reliable boundary because the raw SQL string is passed to the database unchecked. The narrowest working setup is a dedicated PostgreSQL role with only CONNECT and SELECT on the needed tables, no superuser, default_transaction_read_only set on the role, and a statement_timeout. It should point at a read replica or a host reachable only locally, and the package version should be pinned instead of using `npx -y` unpinned.",
+  "findings": [
+    {
+      "ruleId": "network-access",
+      "severity": "info",
+      "file": "dist/index.js",
+      "line": 24,
+      "message": "Opens a pooled connection to the PostgreSQL host given in the first command-line argument; this is the server's only network destination."
+    },
+    {
+      "ruleId": "secret-access",
+      "severity": "warn",
+      "file": "dist/index.js",
+      "line": 20,
+      "message": "The database URL, which can embed the user and password, is taken from a command-line argument and passed straight to pg, so the credential is visible in process listings and client config."
+    },
+    {
+      "ruleId": "secret-access",
+      "severity": "info",
+      "file": "dist/index.js",
+      "line": 23,
+      "message": "The password is stripped from the URL before it is used to build resource URIs, so the credential is not exposed through resource listings."
+    },
+    {
+      "ruleId": "permission-scope",
+      "severity": "warn",
+      "file": "dist/index.js",
+      "line": 91,
+      "message": "The model-supplied SQL string is executed unfiltered after BEGIN READ ONLY, so a multi-statement string such as one with COMMIT could leave the read-only transaction, and the tool can reach anything the database role permits."
+    },
+    {
+      "ruleId": "injection-output",
+      "severity": "warn",
+      "file": "dist/index.js",
+      "line": 93,
+      "message": "Raw database rows, which may contain text written by third parties, are returned to the model as tool output with no sanitisation."
+    },
+    {
+      "ruleId": "injection-output",
+      "severity": "info",
+      "file": "dist/index.js",
+      "line": 36,
+      "message": "Table names read from the database are placed into resource names shown to the model, so a crafted table name would reach the model's context."
+    }
+  ],
+  "reviewedAt": "2026-11-27"
+}

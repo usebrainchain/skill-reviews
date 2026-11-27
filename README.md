@@ -2,7 +2,7 @@
 
 Before OpenClaw installs a ClawHub skill, find out what it asks you for and what its files read, run and send. This
 repository holds BrainChain's reviews of skill releases, and an OpenClaw install policy that checks each install
-against them.
+against them. It also holds reviews of MCP server releases from npm and PyPI.
 
 Each review is a task on [BrainChain](https://usebrainchain.com). A worker reads every file in the release and cites
 the file and line for each finding. Checks run on the review before it is graded. The brain in the chain and a second
@@ -139,6 +139,43 @@ paths, which are relative to the release with `/` between directories, and each 
 the path, its size and its bytes, with both lengths as 8-byte big-endian integers. A release that contains a symbolic
 link has no hash. Older reviews carry the first format, `sha256:`, which left hidden files out, so for those the
 policy asks the operator to approve even when the files match, and names any hidden files the release contains.
+
+## MCP server reviews
+
+Before an agent connects an MCP server, find out what each of its tools can reach. These reviews cover MCP server
+releases published on npm and PyPI. The worker reads every file in the release and reports what each tool can reach,
+where text a third party wrote reaches the model, and any tool that can do more than its description says. Each
+review was ordered with the [MCP server review](https://docs.usebrainchain.com/task-templates#mcp-server-review) task
+template, which you can use to order a review of another release. The install policy above reads only ClawHub skill
+reviews.
+
+`mcp/<registry>/<package>/<version>.json`, for example
+[`mcp/npm/@modelcontextprotocol/server-postgres/0.6.2.json`](mcp/npm/@modelcontextprotocol/server-postgres/0.6.2.json):
+
+| Field | Meaning |
+| --- | --- |
+| `release` | `registry` (`npm` or `pypi`), `name`, `version`, and `artifact`, the exact download: npm's `dist.integrity`, or the SHA-256 of the PyPI file |
+| `files` | The `sha256v2:` hash described above, over the release's unpacked files. For npm these are the contents of the tarball's `package/` directory |
+| `network`, `board`, `task`, `order`, `record`, `verify`, `reviewedAt` | As in skill reviews |
+| `summary` | What the server does and every host, path and credential it reaches |
+| `tools` | One entry per tool: `name`, the `file` and `line` that define it, `reach` (any of `files`, `network`, `shell` and `secrets`), `untrustedOutput` (true when the tool returns text a third party wrote, such as web pages or database rows) and `note` |
+| `permissions` | What the server runs with, the limits the operator can set, and the narrowest setup that works |
+| `findings` | Each finding has `ruleId`, `severity` (`info`, `warn` or `critical`), `file`, `line` and `message` |
+
+Rule ids:
+
+| Rule id | The release |
+| --- | --- |
+| `shell-exec` | Runs commands or child processes |
+| `file-access` | Reads or writes local files |
+| `network-access` | Connects to a host or service |
+| `secret-access` | Reads, stores or sends a key, token, password or credential |
+| `injection-description` | Has a tool, prompt or resource description that instructs the model |
+| `injection-output` | Returns text a third party wrote to the model |
+| `permission-scope` | Has a tool that can do more than its description says or its task needs, or that the operator cannot limit |
+| `pipe-to-shell` | Downloads code and runs it |
+| `encoded-payload` | Decodes data and runs it |
+| `other` | Anything else the files show |
 
 ## License
 
