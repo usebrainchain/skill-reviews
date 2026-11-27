@@ -13,17 +13,39 @@ BrainChain adds reviews as they are accepted, starting with the most-downloaded 
 
 ## Check reviews when OpenClaw installs a skill
 
-`gate/brainchain-review-gate.mjs` is an OpenClaw [install policy](https://docs.openclaw.ai/tools/skills-config). Before
-a ClawHub skill installs, it looks up the release here and compares the files OpenClaw downloaded with the files that
-were reviewed. When the install names a bare slug rather than `@owner/slug`, it first asks ClawHub who publishes it;
-if several publishers use that slug, it asks the operator to install the skill as `@owner/slug`.
+One command turns the check on:
+
+```sh
+npx -y brainchain-install-check@0.1.0
+```
+
+From then on, before OpenClaw installs a skill from ClawHub, it checks the release against the reviews here:
 
 | What it finds | What OpenClaw does |
 | --- | --- |
-| A review with informational findings only | Installs, and shows the findings |
-| A review with warnings or critical findings | Shows the findings and asks the operator to approve |
+| A review with informational findings only | Installs |
+| A review with warnings or critical findings | Shows the findings and asks you to approve |
 | A finding that code is downloaded or decoded and then run | Blocks the install |
-| No review yet, a review whose file hash leaves out hidden files, files that differ from the reviewed ones, a skill from outside ClawHub, or no answer from this index or ClawHub | Asks the operator to approve, and says why |
+| No review yet, a review whose file hash leaves out hidden files, files that differ from the reviewed ones, a skill from outside ClawHub, or no answer from this index or ClawHub | Asks you to approve, and says why |
+
+To install after reading the findings, run the same `openclaw skills install` command in a terminal and type the
+skill's name when OpenClaw asks, or add `--acknowledge-install-policy-warning`. A warning stops a non-interactive
+install until it is approved. Run the command again to update the check, and add `remove` to turn it off.
+
+The command needs Node.js 22 or later and the `openclaw` command, on macOS or Linux. It copies
+`gate/brainchain-review-gate.mjs` into a `policy` folder beside OpenClaw's config, which only you can write, and sets
+`security.installPolicy` to run it for skills. If OpenClaw already runs another install policy, it changes nothing
+unless you add `--replace`, since OpenClaw runs one policy at a time.
+
+OpenClaw runs install policies for skills and plugins. It does not run them when you add an MCP server, so the
+[MCP server reviews](#mcp-server-reviews) below are for reading before you run `openclaw mcp add`.
+
+### How the policy decides
+
+`gate/brainchain-review-gate.mjs` is an OpenClaw [install policy](https://docs.openclaw.ai/tools/skills-config). Before
+a ClawHub skill installs, it looks up the release here and compares the files OpenClaw downloaded with the files that
+were reviewed. When the install names a bare slug rather than `@owner/slug`, it first asks ClawHub who publishes it;
+if several publishers use that slug, it asks you to install the skill as `@owner/slug`.
 
 The policy answers `allow` only when BrainChain has published a review of that exact owner, slug and version, the
 review's `files` hash is `sha256v2` and matches the files OpenClaw passed, and every finding is informational, with
@@ -32,8 +54,10 @@ none for code that is downloaded or decoded and run. Anything else is a warning 
 OpenClaw refuses a warning longer than 4,000 characters or with more than 100 findings, so for a long review the
 policy shows the most severe findings that fit and says how many the review has.
 
-It needs Node.js 22 or later and nothing else. OpenClaw runs a policy only from a directory that no other user can
-write, so keep it in one of your own:
+### Set it up by hand
+
+The policy needs Node.js 22 or later and nothing else. OpenClaw runs a policy only from a directory that no other user
+can write, so keep it in one of your own:
 
 ```sh
 mkdir -p ~/.openclaw/policy && chmod 700 ~/.openclaw/policy
@@ -60,9 +84,6 @@ Then add the policy to `~/.openclaw/openclaw.json`, with the full path to the fi
   },
 }
 ```
-
-A warning stops a non-interactive install until it is approved. To approve after reading the findings, run the same
-`openclaw skills install` command interactively, or add `--acknowledge-install-policy-warning`.
 
 ### Run it by hand
 
@@ -138,7 +159,7 @@ top of every download. Hidden files and files in hidden directories count. Files
 paths, which are relative to the release with `/` between directories, and each adds four parts: its path's length,
 the path, its size and its bytes, with both lengths as 8-byte big-endian integers. A release that contains a symbolic
 link has no hash. Older reviews carry the first format, `sha256:`, which left hidden files out, so for those the
-policy asks the operator to approve even when the files match, and names any hidden files the release contains.
+policy asks you to approve even when the files match, and names any hidden files the release contains.
 
 ## MCP server reviews
 
@@ -147,7 +168,7 @@ releases published on npm and PyPI. The worker reads every file in the release a
 where text a third party wrote reaches the model, and any tool that can do more than its description says. Each
 review was ordered with the [MCP server review](https://docs.usebrainchain.com/task-templates#mcp-server-review) task
 template, which you can use to order a review of another release. The install policy above reads only ClawHub skill
-reviews.
+reviews, because OpenClaw does not run install policies for MCP servers.
 
 `mcp/<registry>/<package>/<version>.json`, for example
 [`mcp/npm/@modelcontextprotocol/server-postgres/0.6.2.json`](mcp/npm/@modelcontextprotocol/server-postgres/0.6.2.json):

@@ -1,7 +1,14 @@
 {
-  "name": "brainchain-skill-reviews",
-  "private": true,
+  "name": "brainchain-install-check",
+  "version": "0.1.0",
+  "description": "Check ClawHub skills against BrainChain's reviews before OpenClaw installs them.",
+  "keywords": ["openclaw", "clawhub", "skills", "install-policy", "security", "brainchain"],
+  "homepage": "https://docs.usebrainchain.com/install-check",
+  "repository": { "type": "git", "url": "git+https://github.com/usebrainchain/skill-reviews.git" },
+  "license": "MIT",
   "type": "module",
+  "bin": { "brainchain-install-check": "bin/brainchain-install-check.mjs" },
+  "files": ["bin/brainchain-install-check.mjs", "gate/brainchain-review-gate.mjs"],
   "engines": { "node": ">=22" },
-  "scripts": { "test": "node --test gate/*.test.mjs" }
+  "scripts": { "test": "node --test gate/*.test.mjs bin/*.test.mjs" }
 }
