@@ -173,16 +173,16 @@ async function main() {
       console.log(`${name}: tasks ${tasks.map((t) => t.id).join(", ")}, none accepted yet`);
       continue;
     }
-    if (!chosen.status.receipt) {
-      console.log(`${name}: task ${chosen.id} is accepted; its receipt, which names the payer, comes once the board pays`);
-      continue;
-    }
     const work = mkdtempSync(join(tmpdir(), "ordered-review-"));
     try {
       const dir = await download(release, work);
       const mismatch = templateMismatch(release, dir, chosen.task);
       if (mismatch) {
         console.log(`${name}: task ${chosen.id} is not added: ${mismatch}`);
+        continue;
+      }
+      if (!chosen.status.receipt) {
+        console.log(`${name}: task ${chosen.id} is accepted and is the template for the release; its receipt, which names the payer, comes once the board pays`);
         continue;
       }
       if (dry) {

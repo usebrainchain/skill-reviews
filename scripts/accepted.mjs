@@ -21,6 +21,8 @@ export async function acceptedResult(network, order) {
     status = await response.json().catch(() => {
       throw new Error(`the desk's answer for order ${order} is not JSON`);
     });
+    // A task graded or settled without acceptance stays that way: there is nothing to wait for.
+    if (status?.task?.accepted === false) throw new Error(`order ${order} was not accepted (task ${status.taskId} ${status.task.status})`);
     if (!status?.task?.accepted || !status.result) continue;
     const result = await get(status.result);
     if (result.ok) code = /```python\r?\n([\s\S]*?)```/.exec(await result.text())?.[1];

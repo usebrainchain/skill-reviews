@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
 import { citationProblems, payerNamedIn } from "./accepted.mjs";
@@ -132,4 +134,18 @@ test("an MCP server task names its registry and artifact, and prose gives way wh
   assert.deepEqual(releaseOf(task.title), { kind: "mcp", name: "@acme/db-mcp", version: "0.1.0" });
   const found = orderedRelease({ ...task, order: `0x${"cd".repeat(32)}` });
   assert.deepEqual(found, { kind: "mcp", name: "@acme/db-mcp", version: "0.1.0", registry: "npm", artifact: integrity, path: "mcp/npm/@acme/db-mcp/0.1.0.json" });
+});
+
+test("a configuration with a secret left in is refused before anything is read from the desk", () => {
+  const dir = release({ "openclaw.json": `{\n  env: { vars: { OPENAI_API_KEY: "s${"k-"}${"x".repeat(24)}" } },\n}\n` });
+  try {
+    const script = join(dirname(fileURLToPath(import.meta.url)), "add-config-review.mjs");
+    const run = spawnSync("node", [script, dir, "openclaw:acme/agent", "2026-11-28", "testnet", `0x${"ab".repeat(32)}`], { encoding: "utf8" });
+    assert.notEqual(run.status, 0);
+    assert.match(run.stderr, /these lines look like secrets, so the files are not published: openclaw\.json line 2/);
+    const usage = spawnSync("node", [script, dir, "slack:acme/agent", "2026-11-28", "testnet", "0x1"], { encoding: "utf8" });
+    assert.match(usage.stderr, /usage: add-config-review\.mjs/);
+  } finally {
+    rmSync(dir, { recursive: true });
+  }
 });
