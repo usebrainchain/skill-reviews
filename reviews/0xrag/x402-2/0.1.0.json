@@ -1,0 +1,82 @@
+{
+  "release": {
+    "registry": "clawhub",
+    "owner": "0xrag",
+    "slug": "x402-2",
+    "version": "0.1.0"
+  },
+  "files": "sha256v2:f1077d5b105d87432960d4b65b88dd3c701947648f0e5e8d439ecd7a3ba130b3",
+  "network": "mainnet",
+  "board": "0xf72857aabb25fe1393b57d2356a090a7000ed13e",
+  "task": 128,
+  "order": "0x2710eda61b7824da052bd226adaf3566119109ef19df17bd7585608e497051f2",
+  "record": "https://brain.usebrainchain.com/records/0xddb180f181a1f97ae52be1b061bd6a5bc46beef3503f823d031cb07c7459f58b.txt",
+  "verify": "npx brainchain-verify mainnet --task 128 --set 0xf72857aabb25fe1393b57d2356a090a7000ed13e",
+  "summary": "The skill teaches an agent to use the `awal` CLI (run as `npx awal@latest x402 ...`) to search the x402 bazaar, inspect payment requirements, and make automatic USDC payments on Base to arbitrary endpoint URLs. It declares no environment variables and asks for no private key. Paid calls need an awal wallet session (`awal auth login <email>`) with a funded USDC balance, plus Node/npx and network access to the Coinbase CDP API (bazaar index) and whatever third-party x402 hosts the agent calls. Spending is not capped unless --max-amount is passed, and model invocation is enabled.",
+  "findings": [
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 10,
+      "message": "Runs the unpinned, mutable package `npx awal@latest`, so the code that handles payments can change between runs; this is npx execution, not pipe-to-shell."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 43,
+      "message": "Later commands call a bare `awal` binary rather than `npx awal@latest`, but no required binary is declared and the frontmatter has no metadata.openclaw block at all."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 119,
+      "message": "Payment requires authenticating an awal wallet (`awal auth login <email>`) with a funded USDC balance, so the skill acts on a wallet credential and funds even though no raw private key is requested and nothing is declared in requires.env."
+    },
+    {
+      "ruleId": "wallet-key",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 67,
+      "message": "`awal x402 pay` automatically spends USDC from the wallet, and --max-amount is optional here, so a call can pay whatever the endpoint demands."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "info",
+      "file": "SKILL.md",
+      "line": 33,
+      "message": "Bazaar search and list fetch the resource index from the Coinbase CDP API (--force-refresh re-fetches it), and results are cached under ~/.config/awal/bazaar/."
+    },
+    {
+      "ruleId": "outbound-host",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 96,
+      "message": "`pay` sends request bodies, query parameters and custom headers (-d, -q, -h) plus payment authorization to any third-party URL the agent chooses, e.g. example.com in the examples."
+    },
+    {
+      "ruleId": "other",
+      "severity": "warn",
+      "file": "SKILL.md",
+      "line": 5,
+      "message": "disable-model-invocation is false and the description (line 3) tells the agent to search the bazaar whenever it has no clear tool, so the model may start paid-service flows on its own."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "skill-card.md",
+      "line": 26,
+      "message": "The card says to set --max-amount on every paid request and pin awal, but SKILL.md's examples use an unpinned @latest and mostly omit --max-amount, so the instructions do not follow the card's own mitigations."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": "skill-card.md",
+      "line": 12,
+      "message": "The License/Terms of Use section is empty even though line 5 says the skill is ready for commercial use."
+    }
+  ],
+  "reviewedAt": "2026-11-28"
+}
