@@ -33,6 +33,9 @@ test("a line is cited by its first 24 letters and digits", () => {
   assert.equal(lineKey("  const pool = new pg.Pool({"), lineKey("const pool = new pg.Pool"));
   assert.notEqual(lineKey("const pool = new pg.Pool({"), lineKey("const client = await pool.connect();"));
   assert.equal(lineKey("  });"), "----");
+  assert.equal(lineKey('        "nx",'), lineKey("nx"));
+  assert.notEqual(lineKey('"nx",'), lineKey('"mcp"'));
+  assert.notEqual(lineKey('"nx",'), "----");
 });
 
 test("citations are checked against the release files", () => {

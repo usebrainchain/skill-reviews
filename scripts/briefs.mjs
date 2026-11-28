@@ -32,11 +32,12 @@ export function readRelease(dir, { skip = [] } = {}) {
 
 /**
  * A line is cited by the start of its text: the first 24 letters and digits, lowercased, so punctuation, quoting and
- * whitespace never decide it. Four hex characters of SHA-256; "----" for a line with fewer than three.
+ * whitespace never decide it. Four hex characters of SHA-256; "----" for a line with no letters or digits. A short line
+ * is keyed like any other: `"nx",` in an args list is where a server's package is named.
  */
 export const lineKey = (line) => {
   const a = String(line).toLowerCase().replace(/[^0-9a-z]/g, "").slice(0, 24);
-  return a.length >= 3 ? createHash("sha256").update(a).digest("hex").slice(0, 4) : "----";
+  return a ? createHash("sha256").update(a).digest("hex").slice(0, 4) : "----";
 };
 
 const numbered = (f) => `<file path="${f.path}">\n${f.text.split("\n").map((l, i) => `${String(i + 1).padStart(4)}  ${l}`).join("\n")}\n</file>`;
@@ -51,16 +52,17 @@ files show, whether or not it suits the publisher.`;
 
 const CITED = `def _key(text):
     a = _re.sub(r"[^0-9a-z]", "", str(text).lower())[:24]
-    return _hl.sha256(a.encode()).hexdigest()[:4] if len(a) >= 3 else None
+    return _hl.sha256(a.encode()).hexdigest()[:4] if a else "----"
 def _cited(item, what):
     f, n = item.get("file"), item.get("line")
+    assert isinstance(item.get("code"), str) and item["code"].strip(), f"{what}: code must copy the cited line"
     assert f in LINES, f"{what}: {f} is not a file in the release"
     assert isinstance(n, int) and 1 <= n <= LINES[f], f"{what}: line {n} is outside {f}"
     assert _key(item.get("code", "")) == KEYS[f][4 * (n - 1):4 * n], f"{what}: code is not the start of {f} line {n}"`;
 
-const CODE_FIELD = `\`line\` is 1-based, as numbered below. \`code\` is the cited line copied from its first character that is not a space;
-you may stop after 40 characters. The checks compare its first 24 letters and digits with the line, so a citation that
-points at the wrong line fails.`;
+const CODE_FIELD = `\`line\` is 1-based, as numbered below. \`code\` is the cited line copied from its first character that is not a space:
+at least its first 40 characters, or all of a shorter line. The checks compare its first 24 letters and digits with the
+line, so a citation that points at the wrong line, or stops before 24 of them, fails.`;
 
 // ClawHub skills ------------------------------------------------------------------------------------------------------
 
