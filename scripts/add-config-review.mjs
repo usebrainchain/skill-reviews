@@ -25,6 +25,18 @@ const SECRETS = [
   /\bhf_[A-Za-z0-9]{30,}/,
   /\b0x[0-9a-fA-F]{64}\b/,
 ];
+// Public 32-byte constants with a key's shape, which the review task leaves in: the EIP-1967 implementation, admin and
+// beacon slots and EIP-1822's proxiable slot.
+const PUBLIC_HEX = new Set([
+  "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
+  "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103",
+  "0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50",
+  "0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7",
+]);
+const secretIn = (line) => {
+  const rest = line.replace(/\b0x[0-9a-fA-F]{64}\b/g, (m) => (PUBLIC_HEX.has(m.toLowerCase()) ? "" : m));
+  return SECRETS.some((re) => re.test(rest));
+};
 
 const argv = process.argv.slice(2);
 const at = argv.indexOf("--source");
@@ -37,7 +49,7 @@ if (!dir || !KINDS.includes(kind) || !name || name.split("/").some((p) => !p || 
 }
 
 const files = readRelease(dir);
-const leaked = files.flatMap(({ path, text }) => text.split("\n").flatMap((line, i) => (SECRETS.some((re) => re.test(line)) ? [`${path} line ${i + 1}`] : [])));
+const leaked = files.flatMap(({ path, text }) => text.split("\n").flatMap((line, i) => (secretIn(line) ? [`${path} line ${i + 1}`] : [])));
 if (leaked.length) throw new Error(`these lines look like secrets, so the files are not published: ${leaked.join(", ")}`);
 
 const accepted = await acceptedResult(network, order);

@@ -137,12 +137,16 @@ test("an MCP server task names its registry and artifact, and prose gives way wh
 });
 
 test("a configuration with a secret left in is refused before anything is read from the desk", () => {
-  const dir = release({ "openclaw.json": `{\n  env: { vars: { OPENAI_API_KEY: "s${"k-"}${"x".repeat(24)}" } },\n}\n` });
+  const slot = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+  const dir = release({
+    "CLAUDE.md": `- \`cast storage <addr> ${slot}\` reads the EIP-1967 implementation slot.\n`,
+    "openclaw.json": `{\n  env: { vars: { OPENAI_API_KEY: "s${"k-"}${"x".repeat(24)}" } },\n}\n`,
+  });
   try {
     const script = join(dirname(fileURLToPath(import.meta.url)), "add-config-review.mjs");
     const run = spawnSync("node", [script, dir, "openclaw:acme/agent", "2026-11-28", "testnet", `0x${"ab".repeat(32)}`], { encoding: "utf8" });
     assert.notEqual(run.status, 0);
-    assert.match(run.stderr, /these lines look like secrets, so the files are not published: openclaw\.json line 2/);
+    assert.match(run.stderr, /these lines look like secrets, so the files are not published: openclaw\.json line 2$/m);
     const usage = spawnSync("node", [script, dir, "slack:acme/agent", "2026-11-28", "testnet", "0x1"], { encoding: "utf8" });
     assert.match(usage.stderr, /usage: add-config-review\.mjs/);
   } finally {

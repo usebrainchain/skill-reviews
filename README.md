@@ -212,7 +212,9 @@ reach, what runs without asking the operator, and where text a third party wrote
 a file and line, and the checks confirm every citation before the grade.
 
 Briefs are public, so secrets are replaced with `<redacted>` before the files go into the brief. A `<redacted>` value
-still shows that a secret is stored in that file, and the review reports it. Order one with the
+still shows that a secret is stored in that file, and the review reports it. A bare 64-digit hex value is replaced too,
+since it could be a private key; the review says whether the text around it shows a key or a hash. Well-known proxy
+storage slots (EIP-1967, EIP-1822) stay as they are. Order one with the
 [Agent configuration review](https://docs.usebrainchain.com/task-templates#agent-configuration-review) template.
 
 `configs/<kind>/<name>/<version or date>.json`, where `kind` is `openclaw`, `claude-code`, `cursor`, `hermes`, `codex`
@@ -224,7 +226,7 @@ or `other`:
 | `files` | The `sha256v2:` hash described above, over the files as the review read them, secrets replaced |
 | `network`, `board`, `task`, `order`, `record`, `verify`, `reviewedAt` | As in skill reviews |
 | `summary` | What the configuration sets up and every host, path, command and credential it reaches |
-| `entries` | One per server, tool, skill, plugin, hook, channel or model provider: `name`, `kind`, the `file` and `line` that configure it, `reach` (any of `files`, `network`, `shell` and `secrets`), `untrustedInput` (true when it brings text a third party wrote to the agent), `approval` (`asks`, `auto`, `off`, or `default` when the files do not say) and `note` |
+| `entries` | One per server, tool, skill, plugin, hook, channel or model provider: `name`, `kind`, the `file` and `line` that configure it, `reach` (any of `files`, `network`, `shell` and `secrets`), `untrustedInput` (true when it brings text a third party wrote to the agent), `approval` (`asks`, `auto` for anything that runs without asking, including an agent the files start unattended, `off`, or `default` when nothing in the files decides it) and `note` |
 | `permissions` | What the agent may do without asking, the limits the configuration sets and leaves out, and the narrowest setup that does the job |
 | `findings` | Each finding has `ruleId`, `severity`, `file`, `line` and `message` |
 

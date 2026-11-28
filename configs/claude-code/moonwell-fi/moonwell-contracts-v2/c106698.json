@@ -1,0 +1,397 @@
+{
+  "config": {
+    "kind": "claude-code",
+    "name": "moonwell-fi/moonwell-contracts-v2",
+    "version": "c106698",
+    "source": "https://github.com/moonwell-fi/moonwell-contracts-v2/tree/c106698a4ed9c8f757cca96265d2d818f99fc4e1"
+  },
+  "files": "sha256v2:02de2be099295ad836cc3348012832b0808dd62cf76ef946a3edf30257a83821",
+  "network": "testnet",
+  "board": "0x7a7cc5d35a642ccc268c7b263ff800bc7ebd52a4",
+  "task": 413,
+  "order": "0xde5f8d71bbafdab89f3cdda4b7ad27b46fdfb6b20bda5751c559e23a4d71c741",
+  "record": "https://brain.testnet.usebrainchain.com/records/0x3eeb5c3a3ecedacb52ada3f6bfd81db51ca89c877805e64608f95c5774fdea7b.txt",
+  "verify": "npx brainchain-verify testnet --task 413 --set 0x7a7cc5d35a642ccc268c7b263ff800bc7ebd52a4",
+  "summary": "This Claude Code configuration sets the agent loose on the moonwell-contracts-v2 Foundry repo with two npx-launched MCP servers (context7 for library docs, evm-rpc for Ethereum/Base/Optimism RPC access), two skills (the model-invocable mip and the user-only simulate-mip), and a set of PostToolUse/PreToolUse command hooks in .claude/settings.json that automatically run forge build, npx tsc --noEmit, git branch and cast against whatever file the agent touches. Reach covers the local repo files (src/, proposals/, chains/, tests and build artifacts), shell execution via the hook commands and skills, outbound network to the two npm-fetched MCP servers and the RPC hosts, and the operator's RPC credentials handed to evm-rpc from the ETH_RPC_URL, BASE_RPC_URL and OP_RPC_URL environment variables. CLAUDE.md also points the agent at an external moonwell-reward-automation.moonwell.workers.dev URL whose JSON/Markdown it is told to commit, bringing third-party-written text into its context.",
+  "entries": [
+    {
+      "name": "context7",
+      "kind": "mcp-server",
+      "file": ".mcp.json",
+      "line": 3,
+      "reach": [
+        "network",
+        "shell"
+      ],
+      "untrustedInput": true,
+      "approval": "auto",
+      "note": "Started unattended via npx -y @upstash/context7-mcp@latest; it fetches package code and returns third-party library documentation into the agent's context."
+    },
+    {
+      "name": "context7 package fetch",
+      "kind": "other",
+      "file": ".mcp.json",
+      "line": 5,
+      "reach": [
+        "network",
+        "shell"
+      ],
+      "untrustedInput": false,
+      "approval": "auto",
+      "note": "The @latest tag pins no version, so npx downloads and runs whatever code the registry serves, without asking the operator."
+    },
+    {
+      "name": "evm-rpc",
+      "kind": "mcp-server",
+      "file": ".mcp.json",
+      "line": 7,
+      "reach": [
+        "network",
+        "shell",
+        "secrets"
+      ],
+      "untrustedInput": true,
+      "approval": "auto",
+      "note": "Started unattended via npx -y @mcpdotdirect/evm-mcp-server; it can read and transact against the configured EVM RPC endpoints using the operator's tokens."
+    },
+    {
+      "name": "evm-rpc package fetch",
+      "kind": "other",
+      "file": ".mcp.json",
+      "line": 9,
+      "reach": [
+        "network",
+        "shell"
+      ],
+      "untrustedInput": false,
+      "approval": "auto",
+      "note": "The package is fetched unversioned from the npm registry, so its code can change under the agent between runs."
+    },
+    {
+      "name": "ETHEREUM_RPC_URL",
+      "kind": "other",
+      "file": ".mcp.json",
+      "line": 11,
+      "reach": [
+        "secrets",
+        "network"
+      ],
+      "untrustedInput": false,
+      "approval": "auto",
+      "note": "Passes the operator's ETH_RPC_URL credential into the evm-rpc server environment for network access."
+    },
+    {
+      "name": "BASE_RPC_URL",
+      "kind": "other",
+      "file": ".mcp.json",
+      "line": 12,
+      "reach": [
+        "secrets",
+        "network"
+      ],
+      "untrustedInput": false,
+      "approval": "auto",
+      "note": "Passes the operator's BASE_RPC_URL credential into the evm-rpc server environment for network access."
+    },
+    {
+      "name": "OPTIMISM_RPC_URL",
+      "kind": "other",
+      "file": ".mcp.json",
+      "line": 13,
+      "reach": [
+        "secrets",
+        "network"
+      ],
+      "untrustedInput": false,
+      "approval": "auto",
+      "note": "Passes the operator's OP_RPC_URL credential into the evm-rpc server environment for network access."
+    },
+    {
+      "name": "PostToolUse EditTool build hook",
+      "kind": "hook",
+      "file": ".claude/settings.json",
+      "line": 9,
+      "reach": [
+        "shell",
+        "files"
+      ],
+      "untrustedInput": false,
+      "approval": "auto",
+      "note": "On every edited .sol file it runs forge build, and for .ts files npx tsc --noEmit, in the shell without asking the operator."
+    },
+    {
+      "name": "PostToolUse EditTool rewards hint hook",
+      "kind": "hook",
+      "file": ".claude/settings.json",
+      "line": 13,
+      "reach": [
+        "shell",
+        "files"
+      ],
+      "untrustedInput": false,
+      "approval": "auto",
+      "note": "Echoes a reminder string when a MIP proposal path is edited, executing in the shell automatically."
+    },
+    {
+      "name": "PostToolUse WriteTool build hook",
+      "kind": "hook",
+      "file": ".claude/settings.json",
+      "line": 22,
+      "reach": [
+        "shell",
+        "files"
+      ],
+      "untrustedInput": false,
+      "approval": "auto",
+      "note": "On every written .sol file it runs forge build, and for .ts files npx tsc --noEmit, automatically in the shell."
+    },
+    {
+      "name": "PostToolUse WriteTool rewards hint hook",
+      "kind": "hook",
+      "file": ".claude/settings.json",
+      "line": 26,
+      "reach": [
+        "shell",
+        "files"
+      ],
+      "untrustedInput": false,
+      "approval": "auto",
+      "note": "Echoes a proposal reminder when a write targets a MIP folder, running in the shell automatically."
+    },
+    {
+      "name": "PreToolUse BashTool branch hint hook",
+      "kind": "hook",
+      "file": ".claude/settings.json",
+      "line": 37,
+      "reach": [
+        "shell",
+        "files"
+      ],
+      "untrustedInput": false,
+      "approval": "auto",
+      "note": "Before any git commit/push it runs git branch --show-current in the shell, without asking the operator."
+    },
+    {
+      "name": "PreToolUse EditTool registry warning hook",
+      "kind": "hook",
+      "file": ".claude/settings.json",
+      "line": 46,
+      "reach": [
+        "shell",
+        "files"
+      ],
+      "untrustedInput": false,
+      "approval": "auto",
+      "note": "Runs a shell case statement that warns when editing Addresses.sol or chains/*.json, automatically before the edit."
+    },
+    {
+      "name": "PreToolUse WriteTool registry warning hook",
+      "kind": "hook",
+      "file": ".claude/settings.json",
+      "line": 55,
+      "reach": [
+        "shell",
+        "files"
+      ],
+      "untrustedInput": false,
+      "approval": "auto",
+      "note": "Runs a shell case statement that warns when writing Addresses.sol or chains/*.json, automatically before the write."
+    },
+    {
+      "name": "mip",
+      "kind": "skill",
+      "file": ".claude/skills/mip/SKILL.md",
+      "line": 1,
+      "reach": [
+        "files",
+        "shell"
+      ],
+      "untrustedInput": false,
+      "approval": "default",
+      "note": "Model-invocable skill that inspects the repo and runs git branch, ls, forge build and forge test to create or modify a governance proposal."
+    },
+    {
+      "name": "simulate-mip",
+      "kind": "skill",
+      "file": ".claude/skills/simulate-mip/SKILL.md",
+      "line": 9,
+      "reach": [
+        "files",
+        "shell"
+      ],
+      "untrustedInput": false,
+      "approval": "default",
+      "note": "User-only skill (model invocation disabled) that sources a proposal .sh and runs forge script --ffi, chmod +x and make audit-rewards in the shell."
+    },
+    {
+      "name": "CLAUDE.md project memory",
+      "kind": "other",
+      "file": "CLAUDE.md",
+      "line": 81,
+      "reach": [
+        "network"
+      ],
+      "untrustedInput": true,
+      "approval": "default",
+      "note": "Tells the agent that monthly proposal JSON/Markdown come from an external moonwell.workers.dev URL, so third-party output reaches the agent's context."
+    }
+  ],
+  "permissions": "The files set no allow or deny permission list, so nothing here restricts which tools the agent may invoke; only harness defaults apply. What the configuration does force is automatic action: every PostToolUse and PreToolUse hook runs its shell command (forge build, npx tsc --noEmit, git branch, case reminders) on each matching edit, write or bash call with no operator approval, and both MCP servers launch unattended through npx with no prompt. Reach is broad and unbounded: the skills and CLAUDE.md grant repo-wide read/write plus forge, cast, git, make and npm/npx shell use, and evm-rpc is handed the operator's RPC credentials. The narrowest setup that still does the job is to pin both MCP packages to exact versions (dropping @latest), scope the hook matchers to the Solidity and proposal paths they guard, and expose the RPC endpoints to evm-rpc through a read-only proxy or a scoped token rather than the operator's full URLs.",
+  "findings": [
+    {
+      "ruleId": "auto-approve",
+      "severity": "critical",
+      "file": ".claude/settings.json",
+      "line": 2,
+      "message": "Declaring command hooks here makes every listed hook run automatically on tool use, so the operator approves none of this shell activity."
+    },
+    {
+      "ruleId": "shell-exec",
+      "severity": "warn",
+      "file": ".claude/settings.json",
+      "line": 9,
+      "message": "The PostToolUse EditTool hook runs forge build (or npx tsc --noEmit for .ts) in a shell on every edit without asking."
+    },
+    {
+      "ruleId": "shell-exec",
+      "severity": "warn",
+      "file": ".claude/settings.json",
+      "line": 22,
+      "message": "The PostToolUse WriteTool hook executes forge build or npx tsc --noEmit in a shell on every file write automatically."
+    },
+    {
+      "ruleId": "shell-exec",
+      "severity": "info",
+      "file": ".claude/settings.json",
+      "line": 37,
+      "message": "The PreToolUse BashTool hook runs git branch --show-current in a shell before any git commit or push."
+    },
+    {
+      "ruleId": "auto-approve",
+      "severity": "warn",
+      "file": ".mcp.json",
+      "line": 3,
+      "message": "The context7 server starts unattended through npx -y with no version pin and no operator prompt."
+    },
+    {
+      "ruleId": "auto-approve",
+      "severity": "warn",
+      "file": ".mcp.json",
+      "line": 7,
+      "message": "The evm-rpc server starts unattended through npx -y and can transact against the configured chains without operator approval."
+    },
+    {
+      "ruleId": "unpinned-server",
+      "severity": "critical",
+      "file": ".mcp.json",
+      "line": 5,
+      "message": "context7 is fetched with the @latest tag, so the registry can serve different code to the agent at any time."
+    },
+    {
+      "ruleId": "unpinned-server",
+      "severity": "critical",
+      "file": ".mcp.json",
+      "line": 9,
+      "message": "evm-rpc is fetched with no version specifier, so the package can change under the agent between runs."
+    },
+    {
+      "ruleId": "secret-access",
+      "severity": "critical",
+      "file": ".mcp.json",
+      "line": 11,
+      "message": "The operator's ETH_RPC_URL credential is handed to the third-party evm-rpc server, giving it the agent's RPC access."
+    },
+    {
+      "ruleId": "secret-access",
+      "severity": "warn",
+      "file": ".mcp.json",
+      "line": 12,
+      "message": "The operator's BASE_RPC_URL credential is passed into the evm-rpc server environment."
+    },
+    {
+      "ruleId": "secret-access",
+      "severity": "warn",
+      "file": ".mcp.json",
+      "line": 13,
+      "message": "The operator's OP_RPC_URL credential is passed into the evm-rpc server environment."
+    },
+    {
+      "ruleId": "network-access",
+      "severity": "warn",
+      "file": ".mcp.json",
+      "line": 3,
+      "message": "context7 connects to its hosted documentation service and returns external library content to the agent."
+    },
+    {
+      "ruleId": "network-access",
+      "severity": "warn",
+      "file": ".mcp.json",
+      "line": 7,
+      "message": "evm-rpc connects to the Ethereum, Base and Optimism RPC endpoints named by the environment variables."
+    },
+    {
+      "ruleId": "injection-input",
+      "severity": "warn",
+      "file": "CLAUDE.md",
+      "line": 81,
+      "message": "CLAUDE.md routes the agent to an external moonwell.workers.dev endpoint whose JSON/Markdown output it is told to commit, so third-party-written content enters its context."
+    },
+    {
+      "ruleId": "injection-input",
+      "severity": "warn",
+      "file": "CLAUDE.md",
+      "line": 82,
+      "message": "The file warns this external automation output can carry negative amounts or zero nativeValue, i.e. attacker-influenced data the agent is instructed to consume."
+    },
+    {
+      "ruleId": "injection-input",
+      "severity": "info",
+      "file": ".mcp.json",
+      "line": 3,
+      "message": "context7 returns third-party documentation text straight into the agent's context, an untrusted-input path."
+    },
+    {
+      "ruleId": "file-access",
+      "severity": "warn",
+      "file": ".claude/skills/mip/SKILL.md",
+      "line": 7,
+      "message": "The mip skill reads and modifies files under src/proposals/, proposals/ and chains/ in the local repo."
+    },
+    {
+      "ruleId": "shell-exec",
+      "severity": "warn",
+      "file": ".claude/skills/simulate-mip/SKILL.md",
+      "line": 42,
+      "message": "The simulate-mip skill chmod +x's a proposal script and stages the change via git update-index, running in the shell."
+    },
+    {
+      "ruleId": "shell-exec",
+      "severity": "warn",
+      "file": ".claude/skills/simulate-mip/SKILL.md",
+      "line": 67,
+      "message": "simulate-mip runs forge script with --ffi, enabling foreign function calls that execute shell commands from the Solidity test context."
+    },
+    {
+      "ruleId": "permission-scope",
+      "severity": "warn",
+      "file": ".claude/settings.json",
+      "line": 5,
+      "message": "The broad EditTool matcher fires the forge build and reminder hooks on every edit, not only Solidity or proposal files."
+    },
+    {
+      "ruleId": "network-access",
+      "severity": "info",
+      "file": "CLAUDE.md",
+      "line": 80,
+      "message": "CLAUDE.md documents that monthly proposal JSON/Markdown are pulled from an external moonwell.workers.dev endpoint over the network."
+    },
+    {
+      "ruleId": "other",
+      "severity": "info",
+      "file": ".claude/skills/simulate-mip/SKILL.md",
+      "line": 14,
+      "message": "simulate-mip is marked user-only (disable-model-invocation), limiting an agent-initiated run but not the operator's own."
+    }
+  ],
+  "reviewedAt": "2026-11-28"
+}
